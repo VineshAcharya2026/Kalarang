@@ -1,0 +1,6 @@
+{
+  "name": "KALARANG — Silks & Studio",
+  "description": "Premium E-Commerce Web App for Indian Silk Sarees. Features customized collection filtering, visual product catalogs, detailed showcase, WhatsApp cart order placement, and full Admin control suite.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
