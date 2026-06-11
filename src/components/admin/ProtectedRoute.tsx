@@ -1,5 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
+import { isAdminUser } from '../../auth';
 import { useAuthStore } from '../../store/authStore';
 
 interface ProtectedRouteProps {
@@ -11,18 +12,17 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (loading) {
     return (
-      <div 
+      <div
         id="admin-protection-loader"
         className="min-h-screen bg-[#FDF8F2] flex flex-col items-center justify-center font-sans text-sm text-gray-500"
       >
         <div className="w-10 h-10 border-4 border-[#B8860B] border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="font-serif italic text-base text-[#1C1008]">Verifying secure Kalarang administrative tokens...</p>
+        <p className="font-serif italic text-base text-[#1C1008]">Verifying admin session...</p>
       </div>
     );
   }
 
-  // Double lock verification: User must exist, and the email must match the allowed admin email.
-  if (!user || user.email !== 'vineshjm@gmail.com' || !user.emailVerified) {
+  if (!isAdminUser(user)) {
     return <Navigate to="/admin/login" replace />;
   }
 

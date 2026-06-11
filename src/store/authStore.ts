@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { User, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../firebase/config';
+import type { User } from 'firebase/auth';
+import { initAuthPersistence, subscribeToAuth } from '../auth';
 
 interface AuthState {
   user: User | null;
@@ -16,8 +16,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   setLoading: (loading) => set({ loading }),
 }));
 
-// Initialize the Auth Listener
-onAuthStateChanged(auth, (user) => {
-  useAuthStore.getState().setUser(user);
-  useAuthStore.getState().setLoading(false);
+initAuthPersistence().then(() => {
+  subscribeToAuth((user) => {
+    useAuthStore.getState().setUser(user);
+    useAuthStore.getState().setLoading(false);
+  });
 });

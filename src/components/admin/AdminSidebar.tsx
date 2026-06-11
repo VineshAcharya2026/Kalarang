@@ -10,15 +10,14 @@ import {
   Sparkles,
   Clapperboard
 } from 'lucide-react';
-import { signOut } from 'firebase/auth';
-import { auth } from '../../firebase/config';
+import { logoutAdmin } from '../../auth';
 
 export default function AdminSidebar() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     if (window.confirm('Are you sure you want to sign out from KALARANG Studio Admin?')) {
-      await signOut(auth);
+      await logoutAdmin();
       navigate('/');
     }
   };

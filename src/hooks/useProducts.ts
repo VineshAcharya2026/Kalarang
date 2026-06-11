@@ -12,7 +12,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { ensureAdminAuth } from '../firebase/adminAuth';
+import { ensureAdminAuth } from '../auth';
 import { getFirebaseErrorMessage } from '../firebase/errors';
 import { Product } from '../types';
 

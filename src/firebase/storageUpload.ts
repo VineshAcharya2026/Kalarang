@@ -1,6 +1,6 @@
 import { ref, uploadBytesResumable, getDownloadURL, type UploadMetadata } from 'firebase/storage';
 import { storage } from './config';
-import { ensureAdminAuth } from './adminAuth';
+import { ensureAdminAuth } from '../auth';
 
 const UPLOAD_TIMEOUT_MS = 120_000;
 
