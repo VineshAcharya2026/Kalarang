@@ -1,7 +1,8 @@
 import { ensureAdminAuth } from '../auth';
 
-const MAX_UPLOAD_MB = 5;
-const UPLOAD_TIMEOUT_MS = 45_000;
+const MAX_UPLOAD_MB = 8;
+const UPLOAD_TIMEOUT_MS = 30_000;
+const MAX_COMPRESSED_BYTES = 900 * 1024;
 
 export interface UploadOptions {
   folder: string;
@@ -9,65 +10,93 @@ export interface UploadOptions {
   maxSizeMb?: number;
 }
 
-const MIME_BY_EXT: Record<string, string> = {
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.png': 'image/png',
-  '.webp': 'image/webp',
-  '.gif': 'image/gif',
-  '.svg': 'image/svg+xml',
-  '.mp4': 'video/mp4',
-  '.webm': 'video/webm',
-  '.mov': 'video/quicktime',
-};
-
 function inferContentType(file: File): string {
   if (file.type && file.type !== 'application/octet-stream') {
     return file.type;
   }
   const lower = file.name.toLowerCase();
-  const ext = Object.keys(MIME_BY_EXT).find((e) => lower.endsWith(e));
-  return ext ? MIME_BY_EXT[ext] : 'image/jpeg';
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.gif')) return 'image/gif';
+  return 'image/jpeg';
 }
 
-function sanitizeFileName(name: string): string {
-  const lower = name.toLowerCase();
-  const dot = lower.lastIndexOf('.');
-  const ext = dot > 0 ? lower.slice(dot) : '.jpg';
-  const base = (dot > 0 ? lower.slice(0, dot) : lower)
-    .replace(/[^a-z0-9_-]/g, '_')
-    .slice(0, 80);
-  return `${Date.now()}_${base || 'file'}${ext}`;
+async function compressImage(file: File): Promise<Blob> {
+  if (!file.type.startsWith('image/') || file.type === 'image/gif' || file.type === 'image/svg+xml') {
+    return file;
+  }
+
+  const bitmap = await createImageBitmap(file);
+  const maxWidth = 1400;
+  const scale = Math.min(1, maxWidth / bitmap.width);
+  const width = Math.round(bitmap.width * scale);
+  const height = Math.round(bitmap.height * scale);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return file;
+
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  bitmap.close();
+
+  const qualities = [0.85, 0.75, 0.65, 0.55];
+  for (const quality of qualities) {
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/jpeg', quality)
+    );
+    if (blob && blob.size <= MAX_COMPRESSED_BYTES) {
+      return blob;
+    }
+  }
+
+  const fallback = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, 'image/jpeg', 0.5)
+  );
+  return fallback || file;
 }
 
-function fileToBase64(file: File): Promise<string> {
+function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result as string;
       resolve(result.split(',')[1] || '');
     };
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsDataURL(file);
+    reader.onerror = () => reject(new Error('Failed to read compressed image'));
+    reader.readAsDataURL(blob);
   });
 }
 
 export async function uploadFile(file: File, options: UploadOptions): Promise<string> {
-  const { folder, onProgress, maxSizeMb = MAX_UPLOAD_MB } = options;
+  const { onProgress, maxSizeMb = MAX_UPLOAD_MB } = options;
 
   if (file.size > maxSizeMb * 1024 * 1024) {
     throw new Error(`File "${file.name}" exceeds the ${maxSizeMb}MB limit.`);
   }
 
+  onProgress?.(5);
+
+  const compressed = await compressImage(file);
+  const contentType =
+    compressed.type && compressed.type !== 'application/octet-stream'
+      ? compressed.type
+      : inferContentType(file);
+
+  if (compressed.size > MAX_COMPRESSED_BYTES) {
+    throw new Error(
+      'Image is still too large after compression. Use a smaller photo or paste an image URL.'
+    );
+  }
+
+  onProgress?.(25);
+
   const user = await ensureAdminAuth();
   const idToken = await user.getIdToken(true);
-  const contentType = inferContentType(file);
-  const fileName = sanitizeFileName(file.name);
+  const data = await blobToBase64(compressed);
 
-  onProgress?.(10);
-
-  const data = await fileToBase64(file);
-  onProgress?.(40);
+  onProgress?.(50);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
@@ -79,7 +108,7 @@ export async function uploadFile(file: File, options: UploadOptions): Promise<st
         Authorization: `Bearer ${idToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ folder, fileName, contentType, data }),
+      body: JSON.stringify({ contentType, data }),
       signal: controller.signal,
     });
 
@@ -90,7 +119,7 @@ export async function uploadFile(file: File, options: UploadOptions): Promise<st
     if (!res.ok || !payload.url) {
       if (res.status === 404) {
         throw new Error(
-          'Upload service is not deployed yet. Wait for Netlify to finish building, or paste an image URL.'
+          'Upload service is not live yet. Wait 2 minutes for Netlify to deploy, or paste an image URL.'
         );
       }
       throw new Error(payload.error || `Upload failed (${res.status})`);
@@ -100,7 +129,7 @@ export async function uploadFile(file: File, options: UploadOptions): Promise<st
     return payload.url;
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') {
-      throw new Error('Upload timed out. Try a smaller image (under 5MB) or paste an image URL.');
+      throw new Error('Upload timed out. Try a smaller image or paste an image URL.');
     }
     throw err;
   } finally {
