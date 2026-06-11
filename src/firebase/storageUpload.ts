@@ -1,8 +1,8 @@
-import { ref, uploadBytesResumable, getDownloadURL, type UploadMetadata } from 'firebase/storage';
-import { storage } from './config';
 import { ensureAdminAuth } from '../auth';
 
-const UPLOAD_TIMEOUT_MS = 120_000;
+const MAX_NETLIFY_UPLOAD_MB = 5;
+const CLIENT_FALLBACK_TIMEOUT_MS = 60_000;
+const STALL_TIMEOUT_MS = 20_000;
 
 export interface UploadOptions {
   folder: string;
@@ -44,72 +44,111 @@ function sanitizeFileName(name: string): string {
   return `${Date.now()}_${base || 'file'}${ext}`;
 }
 
-function getFriendlyUploadError(error: { code?: string; message?: string }): string {
-  switch (error.code) {
-    case 'storage/unauthorized':
-      return 'Upload denied. Sign in as vineshjm@gmail.com and verify storage is enabled for this project.';
-    case 'storage/canceled':
-      return 'Upload was cancelled.';
-    case 'storage/quota-exceeded':
-      return 'Storage quota exceeded.';
-    case 'storage/retry-limit-exceeded':
-      return 'Upload failed after retries. Check your connection.';
-    case 'storage/object-not-found':
-    case 'storage/bucket-not-found':
-      return 'Cloud storage is not set up for this project. Contact the site administrator.';
-    default:
-      return error.message || 'Upload failed. Use the image URL field as a fallback.';
+async function uploadViaNetlifyFunction(
+  file: File,
+  folder: string,
+  onProgress?: (percent: number) => void
+): Promise<string> {
+  const user = await ensureAdminAuth();
+  const idToken = await user.getIdToken(true);
+  const contentType = inferContentType(file);
+  const fileName = sanitizeFileName(file.name);
+
+  onProgress?.(5);
+
+  const res = await fetch('/.netlify/functions/upload-media', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      'Content-Type': contentType,
+      'X-Folder': folder,
+      'X-File-Name': fileName,
+    },
+    body: file,
+  });
+
+  onProgress?.(90);
+
+  const data = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+
+  if (!res.ok || !data.url) {
+    if (res.status === 404 || res.status === 503) {
+      throw new Error('NETLIFY_UPLOAD_UNAVAILABLE');
+    }
+    throw new Error(data.error || `Upload failed (${res.status})`);
   }
+
+  onProgress?.(100);
+  return data.url;
 }
 
-export async function uploadFile(file: File, options: UploadOptions): Promise<string> {
-  await ensureAdminAuth();
-
-  const { folder, onProgress, maxSizeMb = 10 } = options;
-
-  if (file.size > maxSizeMb * 1024 * 1024) {
-    throw new Error(`File "${file.name}" exceeds the ${maxSizeMb}MB limit.`);
-  }
+async function uploadViaFirebaseClient(
+  file: File,
+  folder: string,
+  onProgress?: (percent: number) => void
+): Promise<string> {
+  const [{ ref, uploadBytes, getDownloadURL }, { storage }] = await Promise.all([
+    import('firebase/storage'),
+    import('./config'),
+  ]);
 
   const contentType = inferContentType(file);
   const fileName = sanitizeFileName(file.name);
   const storageRef = ref(storage, `${folder}/${fileName}`);
 
-  const metadata: UploadMetadata = {
+  let stalled = false;
+  const stallTimer = setTimeout(() => {
+    stalled = true;
+  }, STALL_TIMEOUT_MS);
+
+  const uploadPromise = uploadBytes(storageRef, file, {
     contentType,
     customMetadata: { originalName: file.name },
-  };
-
-  return new Promise((resolve, reject) => {
-    const uploadTask = uploadBytesResumable(storageRef, file, metadata);
-
-    const timeoutId = setTimeout(() => {
-      uploadTask.cancel();
-      reject(new Error('Upload timed out. Check your connection or use an image URL instead.'));
-    }, UPLOAD_TIMEOUT_MS);
-
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
-        if (onProgress && snapshot.totalBytes > 0) {
-          onProgress(Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100));
-        }
-      },
-      (error) => {
-        clearTimeout(timeoutId);
-        reject(new Error(getFriendlyUploadError(error)));
-      },
-      async () => {
-        clearTimeout(timeoutId);
-        try {
-          const url = await getDownloadURL(uploadTask.snapshot.ref);
-          resolve(url);
-        } catch (err) {
-          reject(err instanceof Error ? err : new Error('Failed to get download URL.'));
-        }
-      }
-    );
   });
+
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      reject(new Error('Upload timed out. Storage may not be configured — try a smaller image or paste an image URL.'));
+    }, CLIENT_FALLBACK_TIMEOUT_MS);
+  });
+
+  try {
+    onProgress?.(25);
+    const snapshot = await Promise.race([uploadPromise, timeoutPromise]);
+
+    if (stalled) {
+      throw new Error('Upload stalled. Use an image URL or try again on the live Netlify site.');
+    }
+
+    onProgress?.(85);
+    const url = await getDownloadURL(snapshot.ref);
+    onProgress?.(100);
+    return url;
+  } finally {
+    clearTimeout(stallTimer);
+  }
+}
+
+export async function uploadFile(file: File, options: UploadOptions): Promise<string> {
+  const { folder, onProgress, maxSizeMb = MAX_NETLIFY_UPLOAD_MB } = options;
+
+  if (file.size > maxSizeMb * 1024 * 1024) {
+    throw new Error(`File "${file.name}" exceeds the ${maxSizeMb}MB limit.`);
+  }
+
+  try {
+    return await uploadViaNetlifyFunction(file, folder, onProgress);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '';
+    const useClientFallback =
+      import.meta.env.DEV || message === 'NETLIFY_UPLOAD_UNAVAILABLE';
+
+    if (useClientFallback) {
+      return uploadViaFirebaseClient(file, folder, onProgress);
+    }
+
+    throw err;
+  }
 }
 
 export async function uploadFiles(files: File[], options: UploadOptions): Promise<string[]> {

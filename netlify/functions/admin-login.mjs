@@ -1,19 +1,4 @@
-import admin from 'firebase-admin';
-
-function initFirebaseAdmin() {
-  if (admin.apps.length) return admin;
-
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!raw) {
-    throw new Error('FIREBASE_SERVICE_ACCOUNT not configured');
-  }
-
-  admin.initializeApp({
-    credential: admin.credential.cert(JSON.parse(raw)),
-  });
-
-  return admin;
-}
+import { initFirebaseAdmin } from './_firebase-admin.mjs';
 
 export async function handler(event) {
   if (event.httpMethod === 'OPTIONS') {
