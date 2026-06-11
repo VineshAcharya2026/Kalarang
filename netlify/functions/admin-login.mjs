@@ -14,64 +14,70 @@ function initFirebaseAdmin() {
   });
 }
 
-const cors = {
+const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-export default async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: cors });
+export async function handler(event) {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: CORS, body: '' };
   }
 
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
       headers: { 'Content-Type': 'application/json' },
-    });
+      body: JSON.stringify({ error: 'Method not allowed' }),
+    };
   }
 
   const adminEmail = process.env.ADMIN_EMAIL;
   const adminPassword = process.env.ADMIN_PASSWORD;
 
   if (!adminEmail || !adminPassword) {
-    return new Response(JSON.stringify({ error: 'Admin auth is not configured on Netlify' }), {
-      status: 503,
+    return {
+      statusCode: 503,
       headers: { 'Content-Type': 'application/json' },
-    });
+      body: JSON.stringify({ error: 'Admin auth is not configured on Netlify' }),
+    };
   }
 
   try {
-    const { email, password } = await req.json();
+    const { email, password } = JSON.parse(event.body || '{}');
 
     if (email?.trim() !== adminEmail || password !== adminPassword) {
-      return new Response(JSON.stringify({ error: 'Invalid email or password' }), {
-        status: 401,
+      return {
+        statusCode: 401,
         headers: { 'Content-Type': 'application/json' },
-      });
+        body: JSON.stringify({ error: 'Invalid email or password' }),
+      };
     }
 
     initFirebaseAdmin();
     const user = await getAuth().getUserByEmail(adminEmail);
     const token = await getAuth().createCustomToken(user.uid);
 
-    return new Response(JSON.stringify({ token }), {
-      status: 200,
+    return {
+      statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-    });
+      body: JSON.stringify({ token }),
+    };
   } catch (err) {
     if (err instanceof Error && err.message.includes('FIREBASE_SERVICE_ACCOUNT')) {
-      return new Response(JSON.stringify({ error: 'Server auth not configured' }), {
-        status: 503,
+      return {
+        statusCode: 503,
         headers: { 'Content-Type': 'application/json' },
-      });
+        body: JSON.stringify({ error: 'Server auth not configured' }),
+      };
     }
 
     console.error('admin-login error:', err);
-    return new Response(JSON.stringify({ error: 'Login failed. Try again later.' }), {
-      status: 500,
+    return {
+      statusCode: 500,
       headers: { 'Content-Type': 'application/json' },
-    });
+      body: JSON.stringify({ error: 'Login failed. Try again later.' }),
+    };
   }
-};
+}
