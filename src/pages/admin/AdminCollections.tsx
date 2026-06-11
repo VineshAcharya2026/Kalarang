@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useCollections } from '../../hooks/useCollections';
 import { Collection } from '../../types';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../../firebase/config';
+import { uploadFile } from '../../firebase/storageUpload';
 import { Plus, Edit, Trash2, X, Image as ImageIcon, Loader2, ArrowUpDown } from 'lucide-react';
 
 export default function AdminCollections() {
@@ -70,9 +69,7 @@ export default function AdminCollections() {
 
       // Handle Firebase Storage profile thumbnail upload
       if (coverImageFile) {
-        const fileRef = ref(storage, `collections/${Date.now()}_${coverImageFile.name.replace(/[^a-zA-Z0-9.]/g, '')}`);
-        await uploadBytes(fileRef, coverImageFile);
-        finalCover = await getDownloadURL(fileRef);
+        finalCover = await uploadFile(coverImageFile, { folder: 'collections', maxSizeMb: 5 });
       }
 
       // Auto-generates standard slug

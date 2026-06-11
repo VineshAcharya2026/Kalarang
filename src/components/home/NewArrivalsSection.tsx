@@ -11,7 +11,7 @@ interface NewArrivalsSectionProps {
 
 export default function NewArrivalsSection({ products, loading }: NewArrivalsSectionProps) {
   return (
-    <section id="new-arrivals">
+    <section id="new-arrivals" className="scroll-mt-24">
       <div className="flex justify-between items-end mb-8 border-b border-gold/20 pb-3">
         <div>
           <h2 className="font-serif text-2xl sm:text-3xl text-espresso font-bold tracking-wide uppercase flex items-center gap-2">

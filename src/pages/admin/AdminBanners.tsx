@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useBanners } from '../../hooks/useBanners';
 import { Banner } from '../../types';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../../firebase/config';
+import { uploadFile } from '../../firebase/storageUpload';
 import { Plus, Edit, Trash2, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 
 export default function AdminBanners() {
@@ -73,9 +72,7 @@ export default function AdminBanners() {
 
       // Handle Storage upload if file selected
       if (bannerImageFile) {
-        const fileRef = ref(storage, `banners/${Date.now()}_${bannerImageFile.name.replace(/[^a-zA-Z0-9.]/g, '')}`);
-        await uploadBytes(fileRef, bannerImageFile);
-        finalHero = await getDownloadURL(fileRef);
+        finalHero = await uploadFile(bannerImageFile, { folder: 'banners', maxSizeMb: 5 });
       }
 
       const bannerPayload = {

@@ -9,7 +9,10 @@ const app = initializeApp(firebaseConfig);
 // Initialize services
 export const db = getFirestore(app);
 export const auth = getAuth(app);
-export const storage = getStorage(app);
+export const storage = getStorage(
+  app,
+  firebaseConfig.storageBucket || undefined
+);
 
 // Test Firestore Connection
 async function testConnection() {

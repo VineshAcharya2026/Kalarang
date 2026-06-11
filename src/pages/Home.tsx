@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProducts } from '../hooks/useProducts';
 import { useCollections } from '../hooks/useCollections';
@@ -9,12 +9,14 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import WhatsAppFAB from '../components/layout/WhatsAppFAB';
 import HeroSection from '../components/home/HeroSection';
-import AboutTeaser from '../components/home/AboutTeaser';
-import CategoriesSection from '../components/home/CategoriesSection';
+import CategoryPills from '../components/home/CategoryPills';
+import FeaturedProductsSection from '../components/home/FeaturedProductsSection';
+import TrustBadges from '../components/home/TrustBadges';
 import OffersSection from '../components/home/OffersSection';
 import NewArrivalsSection from '../components/home/NewArrivalsSection';
 import BestSellersSection from '../components/home/BestSellersSection';
 import OccasionsSection from '../components/home/OccasionsSection';
+import AboutTeaser from '../components/home/AboutTeaser';
 import VideoReelsSection from '../components/home/VideoReelsSection';
 import VideoSpotlightModal from '../components/home/VideoSpotlightModal';
 
@@ -27,13 +29,37 @@ export default function Home() {
 
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null);
   const [selectedVideoTitle, setSelectedVideoTitle] = useState<string>('');
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const inStockProducts = products.filter((p) => p.inStock);
+  const activeCollections = collections.filter((c) => c.isActive);
+
+  const featuredProducts = useMemo(() => {
+    let filtered = inStockProducts;
+
+    if (activeCategoryId) {
+      filtered = filtered.filter((p) => p.collectionId === activeCategoryId);
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.fabric.toLowerCase().includes(q) ||
+          (p.work && p.work.toLowerCase().includes(q))
+      );
+    }
+
+    const featured = filtered.filter((p) => p.isFeatured);
+    const rest = filtered.filter((p) => !p.isFeatured);
+    return [...featured, ...rest].slice(0, 12);
+  }, [inStockProducts, activeCategoryId, searchQuery]);
 
   const newArrivals = products.filter((p) => p.isNewArrival && p.inStock).slice(0, 8);
   const bestSellers = products.filter((p) => p.isFeatured && p.inStock).slice(0, 8);
-  const offers = products
-    .filter((p) => p.salePrice < p.mrp && p.inStock)
-    .slice(0, 8);
-  const activeCollections = collections.filter((c) => c.isActive);
+  const offers = products.filter((p) => p.salePrice < p.mrp && p.inStock).slice(0, 8);
 
   const activeBanner = banners.find((b) => b.isActive) || {
     imageUrl:
@@ -64,7 +90,11 @@ export default function Home() {
   return (
     <div id="home-view" className="min-h-screen flex flex-col bg-cream">
       <AnnouncementBar />
-      <Navbar />
+      <Navbar
+        transparent
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
 
       <HeroSection
         banner={activeBanner}
@@ -72,13 +102,27 @@ export default function Home() {
         onWatchVideo={handlePlayVideo}
       />
 
-      <main className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8 flex flex-col gap-20 w-full">
-        <AboutTeaser />
-        <CategoriesSection collections={activeCollections} loading={collectionsLoading} />
+      <main className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 flex flex-col gap-16 w-full">
+        <CategoryPills
+          collections={activeCollections}
+          activeId={activeCategoryId}
+          onSelect={setActiveCategoryId}
+          loading={collectionsLoading}
+        />
+
+        <FeaturedProductsSection
+          products={featuredProducts}
+          loading={productsLoading}
+          searchQuery={searchQuery.trim() || undefined}
+        />
+
+        <TrustBadges />
+
         <OffersSection products={offers} loading={productsLoading} />
         <NewArrivalsSection products={newArrivals} loading={productsLoading} />
         <BestSellersSection products={bestSellers} loading={productsLoading} />
         <OccasionsSection onOccasionClick={handleOccasionClick} />
+        <AboutTeaser />
         <VideoReelsSection videos={videos} onPlayVideo={handlePlayVideo} />
       </main>
 

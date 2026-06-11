@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useProducts } from '../../hooks/useProducts';
 import { useCollections } from '../../hooks/useCollections';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../../firebase/config';
+import { uploadFiles } from '../../firebase/storageUpload';
 import { Product } from '../../types';
 import { 
   Plus, 
@@ -45,7 +44,9 @@ export default function AdminProducts() {
 
   // Status flags
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const occasionOptions = ['Office', 'Festive', 'Wedding', 'Temple', 'Casual', 'Gifting'];
 
@@ -86,6 +87,8 @@ export default function AdminProducts() {
     setInStock(true);
     setIsFeatured(false);
     setIsNewArrival(true);
+    setFormError(null);
+    setUploadProgress(0);
     setIsFormOpen(true);
   };
 
@@ -107,6 +110,8 @@ export default function AdminProducts() {
     setInStock(prod.inStock);
     setIsFeatured(prod.isFeatured);
     setIsNewArrival(prod.isNewArrival);
+    setFormError(null);
+    setUploadProgress(0);
     setIsFormOpen(true);
   };
 
@@ -118,23 +123,20 @@ export default function AdminProducts() {
     }
 
     setSubmitting(true);
+    setFormError(null);
 
     try {
       let finalImages = [...imageUrls];
 
-      // Upload selected files to Firebase Storage if files exist
       if (imageFiles.length > 0) {
         setUploading(true);
-        const uploadedUrls = await Promise.all(
-          imageFiles.map(async (file) => {
-            const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
-            const fileRef = ref(storage, `products/${fileName}`);
-            await uploadBytes(fileRef, file);
-            return await getDownloadURL(fileRef);
-          })
-        );
+        setUploadProgress(0);
+        const uploadedUrls = await uploadFiles(imageFiles, {
+          folder: 'products',
+          maxSizeMb: 10,
+          onProgress: setUploadProgress,
+        });
         finalImages = [...finalImages, ...uploadedUrls];
-        setUploading(false);
       }
 
       // Format custom colors
@@ -175,11 +177,15 @@ export default function AdminProducts() {
       }
 
       setIsFormOpen(false);
+      setImageFiles([]);
+      setUploadProgress(0);
     } catch (err) {
       console.error('Failed to submit product profile:', err);
-      alert('Operation failed. Please verify configurations.');
+      const message = err instanceof Error ? err.message : 'Operation failed. Please verify configurations.';
+      setFormError(message);
     } finally {
       setSubmitting(false);
+      setUploading(false);
     }
   };
 
@@ -370,6 +376,28 @@ export default function AdminProducts() {
             </h2>
 
             <form onSubmit={handleFormSubmit} className="flex flex-col gap-5">
+
+              {formError && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-700 p-3 rounded flex items-start gap-2 text-xs">
+                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>{formError}</span>
+                </div>
+              )}
+
+              {uploading && uploadProgress > 0 && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between text-[10px] text-gray-500 uppercase tracking-wider font-bold">
+                    <span>Uploading images...</span>
+                    <span>{uploadProgress}%</span>
+                  </div>
+                  <div className="w-full bg-sand/40 rounded-full h-2 overflow-hidden border border-gold/10">
+                    <div
+                      className="bg-maroon h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* Saree Name */}

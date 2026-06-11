@@ -1,10 +1,9 @@
 {
-  "projectId": "gen-lang-client-0222008024",
-  "appId": "1:830529871844:web:93d6a9d1cafe95ce3471f1",
-  "apiKey": "AIzaSyDtAR3MYCBnGnGfsBLFwVUc2C2ag-XGuw8",
-  "authDomain": "gen-lang-client-0222008024.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-f69cba68-98ac-43b5-b49c-45ad738a58d4",
-  "storageBucket": "gen-lang-client-0222008024.firebasestorage.app",
-  "messagingSenderId": "830529871844",
-  "measurementId": ""
+  "projectId": "kalarang-48b04",
+  "appId": "1:231465634275:web:6b909d30d93502a6f138d6",
+  "apiKey": "AIzaSyB6BUJG1hN2uV6DgvRgeQ_PX2UJhUPCRYI",
+  "authDomain": "kalarang-48b04.firebaseapp.com",
+  "storageBucket": "kalarang-48b04.firebasestorage.app",
+  "messagingSenderId": "231465634275",
+  "measurementId": "G-YRP06RMB4M"
 }

@@ -40,8 +40,17 @@ export default function AdminLogin() {
       }
     } catch (err: any) {
       console.error('Authentication gate error:', err);
-      if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
-        setErrorMsg('Invalid credentials entered. Please check spelling or contact the master studio developer.');
+      if (
+        err.code === 'auth/configuration-not-found' ||
+        err.message?.includes('CONFIGURATION_NOT_FOUND')
+      ) {
+        setErrorMsg(
+          'Firebase Authentication is not enabled for this project yet. Open the Firebase Console → Authentication → Get started → enable Email/Password, then run "npm run seed" locally to create the admin account.'
+        );
+      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+        setErrorMsg('Invalid credentials entered. Use vineshjm@gmail.com and the password set via npm run seed.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setErrorMsg('Too many failed attempts. Please wait a few minutes and try again.');
       } else {
         setErrorMsg(err.message || 'Access gate failed. Verify credentials.');
       }
@@ -83,9 +92,21 @@ export default function AdminLogin() {
 
         {/* Error Notification Block */}
         {errorMsg && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-700 p-3.5 my-4 rounded flex items-start gap-2.5 text-xs">
-            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-            <span>{errorMsg}</span>
+          <div className="bg-red-500/10 border border-red-500/20 text-red-700 p-3.5 my-4 rounded flex flex-col gap-2 text-xs">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+              <span>{errorMsg}</span>
+            </div>
+            {errorMsg.includes('Firebase Authentication is not enabled') && (
+              <a
+                href="https://console.firebase.google.com/project/kalarang-48b04/authentication/providers"
+                target="_blank"
+                rel="noreferrer"
+                className="ml-6 text-maroon font-bold underline hover:text-gold"
+              >
+                Open Firebase Authentication Setup →
+              </a>
+            )}
           </div>
         )}
 
