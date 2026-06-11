@@ -1,18 +1,26 @@
 import { useState, useEffect } from 'react';
-import { 
-  collection, 
-  onSnapshot, 
-  addDoc, 
-  updateDoc, 
-  doc, 
-  query, 
-  where, 
-  orderBy, 
+import {
+  collection,
+  onSnapshot,
+  setDoc,
+  updateDoc,
+  getDoc,
+  doc,
+  query,
+  where,
+  orderBy,
   serverTimestamp,
-  deleteDoc
 } from 'firebase/firestore';
-import { db, OperationType, handleFirestoreError } from '../firebase/config';
+import { db } from '../firebase/config';
+import { ensureAdminAuth } from '../firebase/adminAuth';
+import { getFirebaseErrorMessage } from '../firebase/errors';
 import { Product } from '../types';
+
+function stripUndefined<T extends Record<string, unknown>>(data: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(data).filter(([, value]) => value !== undefined)
+  ) as Partial<T>;
+}
 
 export function useProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -29,17 +37,19 @@ export function useProducts() {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const items = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
+        const items = snapshot.docs.map((snap) => ({
+          id: snap.id,
+          ...snap.data(),
         })) as Product[];
         setProducts(items);
         setLoading(false);
+        setError(null);
       },
       (err) => {
-        setError(err.message);
+        const message = getFirebaseErrorMessage(err, 'Failed to load products.');
+        setError(message);
         setLoading(false);
-        handleFirestoreError(err, OperationType.GET, 'products');
+        console.error('Products snapshot error:', err);
       }
     );
 
@@ -48,38 +58,57 @@ export function useProducts() {
 
   const addProduct = async (productData: Omit<Product, 'id' | 'createdAt' | 'isDeleted'>) => {
     try {
-      const docRef = await addDoc(collection(db, 'products'), {
+      await ensureAdminAuth();
+
+      const docId = productData.slug;
+      if (!docId) {
+        throw new Error('Product slug is required.');
+      }
+
+      const existing = await getDoc(doc(db, 'products', docId));
+      if (existing.exists() && !existing.data()?.isDeleted) {
+        throw new Error(
+          `A product named similarly already exists (slug: ${docId}). Use a different display name.`
+        );
+      }
+
+      await setDoc(doc(db, 'products', docId), {
         ...productData,
         isDeleted: false,
         createdAt: serverTimestamp(),
       });
-      return docRef.id;
+
+      return docId;
     } catch (err) {
-      handleFirestoreError(err, OperationType.CREATE, 'products');
+      throw new Error(getFirebaseErrorMessage(err, 'Failed to add product.'));
     }
   };
 
   const updateProduct = async (id: string, productData: Partial<Product>) => {
     try {
-      const docRef = doc(db, 'products', id);
-      await updateDoc(docRef, {
-        ...productData,
+      await ensureAdminAuth();
+
+      const { id: _id, createdAt: _createdAt, ...updates } = productData;
+      const payload = stripUndefined({
+        ...updates,
         updatedAt: serverTimestamp(),
       });
+
+      await updateDoc(doc(db, 'products', id), payload);
     } catch (err) {
-      handleFirestoreError(err, OperationType.UPDATE, `products/${id}`);
+      throw new Error(getFirebaseErrorMessage(err, 'Failed to update product.'));
     }
   };
 
-  // Enforce soft deletion as requested in scope
   const deleteProduct = async (id: string) => {
     try {
-      const docRef = doc(db, 'products', id);
-      await updateDoc(docRef, {
+      await ensureAdminAuth();
+      await updateDoc(doc(db, 'products', id), {
         isDeleted: true,
+        updatedAt: serverTimestamp(),
       });
     } catch (err) {
-      handleFirestoreError(err, OperationType.UPDATE, `products/${id}`);
+      throw new Error(getFirebaseErrorMessage(err, 'Failed to delete product.'));
     }
   };
 

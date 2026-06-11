@@ -1,5 +1,6 @@
 import { ref, uploadBytesResumable, getDownloadURL, type UploadMetadata } from 'firebase/storage';
 import { storage } from './config';
+import { ensureAdminAuth } from './adminAuth';
 
 const UPLOAD_TIMEOUT_MS = 120_000;
 
@@ -9,47 +10,73 @@ export interface UploadOptions {
   maxSizeMb?: number;
 }
 
+const MIME_BY_EXT: Record<string, string> = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.mov': 'video/quicktime',
+};
+
+function inferContentType(file: File): string {
+  if (file.type && file.type !== 'application/octet-stream') {
+    return file.type;
+  }
+
+  const lower = file.name.toLowerCase();
+  const ext = Object.keys(MIME_BY_EXT).find((e) => lower.endsWith(e));
+  if (ext) return MIME_BY_EXT[ext];
+
+  return 'image/jpeg';
+}
+
 function sanitizeFileName(name: string): string {
-  const ext = name.includes('.') ? name.slice(name.lastIndexOf('.')) : '';
-  const base = name.slice(0, name.length - ext.length).replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 80);
-  return `${Date.now()}_${base || 'file'}${ext.toLowerCase()}`;
+  const lower = name.toLowerCase();
+  const dot = lower.lastIndexOf('.');
+  const ext = dot > 0 ? lower.slice(dot) : '.jpg';
+  const base = (dot > 0 ? lower.slice(0, dot) : lower)
+    .replace(/[^a-z0-9_-]/g, '_')
+    .slice(0, 80);
+  return `${Date.now()}_${base || 'file'}${ext}`;
 }
 
 function getFriendlyUploadError(error: { code?: string; message?: string }): string {
   switch (error.code) {
     case 'storage/unauthorized':
-      return 'Upload denied. Sign in as the admin account (vineshjm@gmail.com) and try again.';
+      return 'Upload denied. Sign in as vineshjm@gmail.com, enable Firebase Storage, and deploy storage rules (npm run deploy:firebase-rules).';
     case 'storage/canceled':
       return 'Upload was cancelled.';
     case 'storage/quota-exceeded':
-      return 'Storage quota exceeded. Free up space or upgrade your Firebase plan.';
+      return 'Storage quota exceeded.';
     case 'storage/retry-limit-exceeded':
-      return 'Upload failed after multiple retries. Check your connection and try again.';
-    case 'storage/invalid-checksum':
-      return 'File was corrupted during upload. Please try again.';
+      return 'Upload failed after retries. Check your connection.';
     case 'storage/object-not-found':
     case 'storage/bucket-not-found':
-      return 'Firebase Storage is not set up yet. Open Firebase Console → Storage → Get started, then try again. You can also paste an image URL in the fallback field below.';
+      return 'Firebase Storage is not set up. Open Firebase Console → Storage → Get started, then run npm run deploy:firebase-rules.';
     default:
-      if (error.message?.includes('storage') || error.message?.includes('Storage')) {
-        return `${error.message} If this persists, enable Firebase Storage in the console or use the image URL fallback field.`;
-      }
-      return error.message || 'Upload failed. Enable Firebase Storage in the console or use the image URL fallback field.';
+      return error.message || 'Upload failed. Use the image URL field as a fallback.';
   }
 }
 
-export function uploadFile(file: File, options: UploadOptions): Promise<string> {
+export async function uploadFile(file: File, options: UploadOptions): Promise<string> {
+  await ensureAdminAuth();
+
   const { folder, onProgress, maxSizeMb = 10 } = options;
 
   if (file.size > maxSizeMb * 1024 * 1024) {
-    return Promise.reject(new Error(`File "${file.name}" exceeds the ${maxSizeMb}MB limit.`));
+    throw new Error(`File "${file.name}" exceeds the ${maxSizeMb}MB limit.`);
   }
 
+  const contentType = inferContentType(file);
   const fileName = sanitizeFileName(file.name);
   const storageRef = ref(storage, `${folder}/${fileName}`);
 
   const metadata: UploadMetadata = {
-    contentType: file.type || 'application/octet-stream',
+    contentType,
     customMetadata: { originalName: file.name },
   };
 
@@ -58,11 +85,7 @@ export function uploadFile(file: File, options: UploadOptions): Promise<string> 
 
     const timeoutId = setTimeout(() => {
       uploadTask.cancel();
-      reject(
-        new Error(
-          'Upload timed out. Open Firebase Console → Storage → Get started, then redeploy storage rules.'
-        )
-      );
+      reject(new Error('Upload timed out. Check Firebase Storage setup or use an image URL instead.'));
     }, UPLOAD_TIMEOUT_MS);
 
     uploadTask.on(
@@ -89,10 +112,7 @@ export function uploadFile(file: File, options: UploadOptions): Promise<string> 
   });
 }
 
-export async function uploadFiles(
-  files: File[],
-  options: UploadOptions
-): Promise<string[]> {
+export async function uploadFiles(files: File[], options: UploadOptions): Promise<string[]> {
   const results: string[] = [];
   for (let i = 0; i < files.length; i++) {
     const file = files[i];

@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "deploy:firebase-rules": "firebase deploy --project kalarang-48b04 --only firestore:rules,storage",
+    "deploy:firebase-rules": "firebase deploy --project kalarang-48b04 --only firestore:rules,firestore:indexes,storage",
+    "configure": "node scripts/configure-production.mjs",
     "seed": "node scripts/bootstrap.mjs"
   },
   "dependencies": {

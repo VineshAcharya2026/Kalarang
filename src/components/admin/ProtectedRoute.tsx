@@ -22,7 +22,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   // Double lock verification: User must exist, and the email must match the allowed admin email.
-  if (!user || user.email !== 'vineshjm@gmail.com') {
+  if (!user || user.email !== 'vineshjm@gmail.com' || !user.emailVerified) {
     return <Navigate to="/admin/login" replace />;
   }
 

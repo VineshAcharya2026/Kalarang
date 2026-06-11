@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { Lock, Mail, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { auth } from '../../firebase/config';
 import { useAuthStore } from '../../store/authStore';
@@ -15,7 +15,7 @@ export default function AdminLogin() {
 
   // If already logged in, redirect directly to admin panel dashboard
   useEffect(() => {
-    if (user && user.email === 'vineshjm@gmail.com') {
+    if (user && user.email === 'vineshjm@gmail.com' && user.emailVerified) {
       navigate('/admin/dashboard');
     }
   }, [user, navigate]);
@@ -32,12 +32,24 @@ export default function AdminLogin() {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
-      // Double check that the user logging in corresponds to the verified admin email
-      if (userCredential.user.email !== 'vineshjm@gmail.com') {
+      const signedInUser = userCredential.user;
+
+      if (signedInUser.email !== 'vineshjm@gmail.com') {
+        await signOut(auth);
         setErrorMsg('Unauthorized access attempts. Only vineshjm@gmail.com is permitted.');
-      } else {
-        navigate('/admin/dashboard');
+        return;
       }
+
+      if (!signedInUser.emailVerified) {
+        await signOut(auth);
+        setErrorMsg(
+          'Admin email is not verified. Run "npm run seed" locally to verify the account, then sign in again.'
+        );
+        return;
+      }
+
+      await signedInUser.getIdToken(true);
+      navigate('/admin/dashboard');
     } catch (err: any) {
       console.error('Authentication gate error:', err);
       if (

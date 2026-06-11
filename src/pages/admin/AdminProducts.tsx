@@ -2,7 +2,16 @@ import React, { useState } from 'react';
 import { useProducts } from '../../hooks/useProducts';
 import { useCollections } from '../../hooks/useCollections';
 import { uploadFiles } from '../../firebase/storageUpload';
+import { getFirebaseErrorMessage } from '../../firebase/errors';
 import { Product } from '../../types';
+
+function slugFromName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
 import { 
   Plus, 
   Edit, 
@@ -63,9 +72,23 @@ export default function AdminProducts() {
       const filesArray = Array.from(e.target.files) as File[];
       setImageFiles(filesArray);
 
-      // Create object URLs for previewing
-      const previews = filesArray.map((file) => URL.createObjectURL(file));
-      setImagePreviews(previews);
+      const newPreviews = filesArray.map((file) => URL.createObjectURL(file));
+      setImagePreviews([...imageUrls, ...newPreviews]);
+    }
+  };
+
+  const handleImageUrlsChange = (value: string) => {
+    const urls = value.split(',').map((u) => u.trim()).filter(Boolean);
+    setImageUrls(urls);
+    const localPreviews = imagePreviews.filter((p) => p.startsWith('blob:'));
+    setImagePreviews([...urls, ...localPreviews]);
+  };
+
+  const handleQuickUpdate = async (id: string, data: Partial<Product>) => {
+    try {
+      await updateProduct(id, data);
+    } catch (err) {
+      alert(getFirebaseErrorMessage(err, 'Failed to update product.'));
     }
   };
 
@@ -136,7 +159,10 @@ export default function AdminProducts() {
           maxSizeMb: 10,
           onProgress: setUploadProgress,
         });
-        finalImages = [...finalImages, ...uploadedUrls];
+        // New uploads replace blob previews; keep any pasted URLs + new uploads
+        finalImages = editingId
+          ? [...imageUrls.filter((u) => u.startsWith('http')), ...uploadedUrls]
+          : [...finalImages, ...uploadedUrls];
       }
 
       // Format custom colors
@@ -145,12 +171,10 @@ export default function AdminProducts() {
         .map((c) => c.trim())
         .filter(Boolean);
 
-      // Auto-generate URL slug
-      const slugValue = name
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-');
+      // Keep slug stable when editing so product URLs and doc IDs stay mapped
+      const slugValue = editingId
+        ? products.find((p) => p.id === editingId)?.slug || slugFromName(name)
+        : slugFromName(name);
 
       const productPayload = {
         name,
@@ -181,8 +205,7 @@ export default function AdminProducts() {
       setUploadProgress(0);
     } catch (err) {
       console.error('Failed to submit product profile:', err);
-      const message = err instanceof Error ? err.message : 'Operation failed. Please verify configurations.';
-      setFormError(message);
+      setFormError(getFirebaseErrorMessage(err, 'Operation failed. Please verify configurations.'));
     } finally {
       setSubmitting(false);
       setUploading(false);
@@ -190,8 +213,13 @@ export default function AdminProducts() {
   };
 
   const handleDeleteTrigger = async (id: string, prodName: string) => {
-    if (window.confirm(`Are you sure you want to delete the product: "${prodName}" from display catalogue?`)) {
+    if (!window.confirm(`Are you sure you want to delete the product: "${prodName}" from display catalogue?`)) {
+      return;
+    }
+    try {
       await deleteProduct(id);
+    } catch (err) {
+      alert(getFirebaseErrorMessage(err, 'Failed to delete product.'));
     }
   };
 
@@ -288,7 +316,7 @@ export default function AdminProducts() {
                       {/* In Stock toggle */}
                       <td className="py-3 px-4 text-center">
                         <button
-                          onClick={() => updateProduct(prod.id, { inStock: !prod.inStock })}
+                          onClick={() => handleQuickUpdate(prod.id, { inStock: !prod.inStock })}
                           className={`inline-block px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider select-none border cursor-pointer ${
                             prod.inStock
                               ? 'bg-green-50 text-green-700 border-green-200'
@@ -302,7 +330,7 @@ export default function AdminProducts() {
                       {/* Featured toggle */}
                       <td className="py-3 px-4 text-center">
                         <button
-                          onClick={() => updateProduct(prod.id, { isFeatured: !prod.isFeatured })}
+                          onClick={() => handleQuickUpdate(prod.id, { isFeatured: !prod.isFeatured })}
                           className={`p-1.5 rounded transition-colors cursor-pointer ${
                             prod.isFeatured 
                               ? 'text-[#B8860B] bg-[#B8860B]/10 hover:bg-[#B8860B]/15' 
@@ -317,7 +345,7 @@ export default function AdminProducts() {
                       {/* New Arrival toggle */}
                       <td className="py-3 px-4 text-center">
                         <button
-                          onClick={() => updateProduct(prod.id, { isNewArrival: !prod.isNewArrival })}
+                          onClick={() => handleQuickUpdate(prod.id, { isNewArrival: !prod.isNewArrival })}
                           className={`p-1.5 rounded transition-colors cursor-pointer ${
                             prod.isNewArrival 
                               ? 'text-[#7A1C2E] bg-[#7A1C2E]/10 hover:bg-[#7A1C2E]/15' 
@@ -555,7 +583,7 @@ export default function AdminProducts() {
                       placeholder="e.g. https://images.unsplash.com/..., https://..."
                       rows={3}
                       value={imageUrls.join(', ')}
-                      onChange={(e) => setImageUrls(e.target.value.split(',').map((u) => u.trim()).filter(Boolean))}
+                      onChange={(e) => handleImageUrlsChange(e.target.value)}
                       className="bg-[#FDF8F2] border border-[#B8860B]/20 rounded text-xs p-2 focus:outline-none resize-none text-[#1C1008]"
                     />
                   </div>
