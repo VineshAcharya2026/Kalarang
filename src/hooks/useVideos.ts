@@ -10,8 +10,8 @@ import {
   orderBy,
   serverTimestamp
 } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { db, storage, OperationType, handleFirestoreError } from '../firebase/config';
+import { db, OperationType, handleFirestoreError } from '../firebase/config';
+import { uploadFile } from '../firebase/storageUpload';
 import { HeroVideo } from '../types';
 
 export function useVideos() {
@@ -75,38 +75,8 @@ export function useVideos() {
     }
   };
 
-  // Upload progress tracking
-  const uploadVideoFile = (
-    file: File, 
-    onProgress: (progress: number) => void
-  ): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      // Create a unique file name
-      const uniqueName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
-      const storageRef = ref(storage, `hero-videos/${uniqueName}`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          onProgress(progress);
-        },
-        (error) => {
-          console.error('Video upload to Firebase Storage failed:', error);
-          reject(error);
-        },
-        async () => {
-          try {
-            const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-            resolve(downloadUrl);
-          } catch (err) {
-            reject(err);
-          }
-        }
-      );
-    });
-  };
+  const uploadVideoFile = (file: File, onProgress: (progress: number) => void): Promise<string> =>
+    uploadFile(file, { folder: 'hero-videos', maxSizeMb: 5, onProgress });
 
   return {
     videos,

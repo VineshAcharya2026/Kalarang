@@ -4,6 +4,7 @@
 
 [functions]
   directory = "netlify/functions"
+  node_bundler = "esbuild"
 
 [functions."upload-media"]
   timeout = 26
@@ -32,6 +33,13 @@
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Keep Netlify Functions reachable (must be before SPA catch-all)
+[[redirects]]
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = true
 
 # SPA routing — all paths serve index.html for React Router
 [[redirects]]

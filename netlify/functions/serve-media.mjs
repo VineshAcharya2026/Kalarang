@@ -1,9 +1,9 @@
 import { getStore } from '@netlify/blobs';
 
-export async function handler(event) {
-  const key = event.queryStringParameters?.key;
+export default async (req) => {
+  const key = new URL(req.url).searchParams.get('key');
   if (!key) {
-    return { statusCode: 400, body: 'Missing key' };
+    return new Response('Missing key', { status: 400 });
   }
 
   try {
@@ -11,7 +11,7 @@ export async function handler(event) {
     const data = await store.get(key, { type: 'arrayBuffer' });
 
     if (!data) {
-      return { statusCode: 404, body: 'Not found' };
+      return new Response('Not found', { status: 404 });
     }
 
     let contentType = 'application/octet-stream';
@@ -19,20 +19,18 @@ export async function handler(event) {
       const meta = await store.getMetadata(key);
       contentType = meta?.metadata?.contentType || contentType;
     } catch {
-      /* metadata optional */
+      /* optional */
     }
 
-    return {
-      statusCode: 200,
+    return new Response(data, {
+      status: 200,
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
-      body: Buffer.from(data).toString('base64'),
-      isBase64Encoded: true,
-    };
+    });
   } catch (err) {
     console.error('serve-media error:', err);
-    return { statusCode: 500, body: 'Failed to load media' };
+    return new Response('Failed to load media', { status: 500 });
   }
-}
+};
