@@ -297,7 +297,7 @@ async function main() {
   }
 
   console.log('\n=== ADMIN LOGIN ===');
-  console.log('URL:      https://kalarang-48b04.web.app/admin/login');
+  console.log('URL:      https://kalarang2026.netlify.app/admin/login');
   console.log(`Email:    ${ADMIN_EMAIL}`);
   console.log(`Password: ${ADMIN_PASSWORD}`);
   console.log('\n=== PRODUCTS ADDED ===');

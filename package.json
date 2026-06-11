@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "deploy": "npm run build && firebase deploy",
+    "deploy:firebase-rules": "firebase deploy --project kalarang-48b04 --only firestore:rules,storage",
     "seed": "node scripts/bootstrap.mjs"
   },
   "dependencies": {
