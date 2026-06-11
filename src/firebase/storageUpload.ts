@@ -47,7 +47,7 @@ function sanitizeFileName(name: string): string {
 function getFriendlyUploadError(error: { code?: string; message?: string }): string {
   switch (error.code) {
     case 'storage/unauthorized':
-      return 'Upload denied. Sign in as vineshjm@gmail.com, enable Firebase Storage, and deploy storage rules (npm run deploy:firebase-rules).';
+      return 'Upload denied. Sign in as vineshjm@gmail.com and verify storage is enabled for this project.';
     case 'storage/canceled':
       return 'Upload was cancelled.';
     case 'storage/quota-exceeded':
@@ -56,7 +56,7 @@ function getFriendlyUploadError(error: { code?: string; message?: string }): str
       return 'Upload failed after retries. Check your connection.';
     case 'storage/object-not-found':
     case 'storage/bucket-not-found':
-      return 'Firebase Storage is not set up. Open Firebase Console → Storage → Get started, then run npm run deploy:firebase-rules.';
+      return 'Cloud storage is not set up for this project. Contact the site administrator.';
     default:
       return error.message || 'Upload failed. Use the image URL field as a fallback.';
   }
@@ -85,7 +85,7 @@ export async function uploadFile(file: File, options: UploadOptions): Promise<st
 
     const timeoutId = setTimeout(() => {
       uploadTask.cancel();
-      reject(new Error('Upload timed out. Check Firebase Storage setup or use an image URL instead.'));
+      reject(new Error('Upload timed out. Check your connection or use an image URL instead.'));
     }, UPLOAD_TIMEOUT_MS);
 
     uploadTask.on(

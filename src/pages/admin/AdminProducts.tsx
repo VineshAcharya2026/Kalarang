@@ -554,10 +554,9 @@ export default function AdminProducts() {
                 </div>
               </div>
 
-              {/* Image asset uploader (Firebase storage) */}
               <div className="flex flex-col gap-2">
                 <label className="text-xs font-bold text-[#1C1008] uppercase tracking-wider">
-                  Saree Product Showcase Images (Firebase Storage & Fallback URLs)
+                  Saree Product Showcase Images
                 </label>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

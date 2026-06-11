@@ -23,7 +23,7 @@ export function getFirebaseErrorMessage(error: unknown, fallback: string): strin
       case 'failed-precondition':
         return 'Database index is building. Wait a few minutes and refresh.';
       case 'storage/unauthorized':
-        return 'Upload denied. Sign in as admin and ensure Firebase Storage is enabled.';
+        return 'Upload denied. Sign in as admin and verify storage is configured.';
       case 'storage/canceled':
         return 'Upload was cancelled.';
       case 'storage/quota-exceeded':

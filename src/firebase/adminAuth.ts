@@ -25,9 +25,7 @@ export async function ensureAdminAuth(): Promise<User> {
   }
 
   if (!user.emailVerified) {
-    throw new Error(
-      'Your admin email is not verified. Check your inbox or re-create the account via npm run seed.'
-    );
+    throw new Error('Your admin email is not verified. Contact the site administrator.');
   }
 
   // Refresh ID token so Storage rules see email_verified == true

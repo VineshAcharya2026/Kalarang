@@ -5,6 +5,13 @@
 [build.environment]
   NODE_VERSION = "20"
   VITE_APP_URL = "https://kalarang2026.netlify.app"
+  VITE_FIREBASE_API_KEY = "AIzaSyB6BUJG1hN2uV6DgvRgeQ_PX2UJhUPCRYI"
+  VITE_FIREBASE_AUTH_DOMAIN = "kalarang-48b04.firebaseapp.com"
+  VITE_FIREBASE_PROJECT_ID = "kalarang-48b04"
+  VITE_FIREBASE_STORAGE_BUCKET = "kalarang-48b04.firebasestorage.app"
+  VITE_FIREBASE_MESSAGING_SENDER_ID = "231465634275"
+  VITE_FIREBASE_APP_ID = "1:231465634275:web:6b909d30d93502a6f138d6"
+  VITE_FIREBASE_MEASUREMENT_ID = "G-YRP06RMB4M"
 
 # Security headers for production
 [[headers]]

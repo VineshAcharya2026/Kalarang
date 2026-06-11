@@ -1,32 +1,32 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, type FirebaseOptions } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import firebaseConfig from '../../firebase-applet-config.json';
+
+function requireEnv(key: string): string {
+  const value = import.meta.env[key];
+  if (!value) {
+    throw new Error(`Missing ${key}. Set it in Netlify build env or .env for local dev.`);
+  }
+  return value;
+}
+
+const firebaseConfig: FirebaseOptions = {
+  apiKey: requireEnv('VITE_FIREBASE_API_KEY'),
+  authDomain: requireEnv('VITE_FIREBASE_AUTH_DOMAIN'),
+  projectId: requireEnv('VITE_FIREBASE_PROJECT_ID'),
+  storageBucket: requireEnv('VITE_FIREBASE_STORAGE_BUCKET'),
+  messagingSenderId: requireEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
+  appId: requireEnv('VITE_FIREBASE_APP_ID'),
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+};
 
 const app = initializeApp(firebaseConfig);
 
-// Initialize services
 export const db = getFirestore(app);
 export const auth = getAuth(app);
-export const storage = getStorage(
-  app,
-  firebaseConfig.storageBucket || undefined
-);
+export const storage = getStorage(app, firebaseConfig.storageBucket);
 
-// Test Firestore Connection
-async function testConnection() {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.warn("Please check your Firebase configuration or network status.");
-    }
-  }
-}
-testConnection();
-
-// Structured Error Handling as mandated by firebase-integration guidelines
 export enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',
@@ -62,13 +62,14 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
       emailVerified: auth.currentUser?.emailVerified,
       isAnonymous: auth.currentUser?.isAnonymous,
       tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData?.map(provider => ({
-        providerId: provider.providerId,
-        email: provider.email,
-      })) || []
+      providerInfo:
+        auth.currentUser?.providerData?.map((provider) => ({
+          providerId: provider.providerId,
+          email: provider.email,
+        })) || [],
     },
     operationType,
-    path
+    path,
   };
   console.error('Firestore Error: ', JSON.stringify(errInfo));
   throw new Error(JSON.stringify(errInfo));
