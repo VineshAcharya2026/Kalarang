@@ -68,7 +68,7 @@ async function loginViaNetlifyFunction(email: string, password: string): Promise
 
   const data = (await res.json().catch(() => ({}))) as { token?: string; error?: string };
 
-  if (res.status === 503 || res.status === 404) {
+  if (res.status === 503 || res.status === 404 || res.status === 502) {
     throw new Error('NETLIFY_AUTH_UNAVAILABLE');
   }
 
