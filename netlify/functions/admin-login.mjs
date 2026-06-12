@@ -1,4 +1,4 @@
-import { SignJWT, importPKCS8 } from 'jose';
+import crypto from 'crypto';
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -18,20 +18,37 @@ function normalizePrivateKey(key) {
   return key.includes('\\n') ? key.replace(/\\n/g, '\n') : key;
 }
 
-async function getGoogleAccessToken(serviceAccount) {
-  const privateKey = await importPKCS8(normalizePrivateKey(serviceAccount.private_key), 'RS256');
-  const now = Math.floor(Date.now() / 1000);
+function base64url(input) {
+  return Buffer.from(input).toString('base64url');
+}
 
-  const assertion = await new SignJWT({
-    scope: 'https://www.googleapis.com/auth/identitytoolkit',
-  })
-    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
-    .setIssuer(serviceAccount.client_email)
-    .setSubject(serviceAccount.client_email)
-    .setAudience('https://oauth2.googleapis.com/token')
-    .setIssuedAt(now)
-    .setExpirationTime(now + 3600)
-    .sign(privateKey);
+function signJwt(payload, serviceAccount) {
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const encodedHeader = base64url(JSON.stringify(header));
+  const encodedPayload = base64url(JSON.stringify(payload));
+  const signingInput = `${encodedHeader}.${encodedPayload}`;
+
+  const signature = crypto
+    .createSign('RSA-SHA256')
+    .update(signingInput)
+    .sign(normalizePrivateKey(serviceAccount.private_key), 'base64url');
+
+  return `${signingInput}.${signature}`;
+}
+
+async function getGoogleAccessToken(serviceAccount) {
+  const now = Math.floor(Date.now() / 1000);
+  const assertion = signJwt(
+    {
+      iss: serviceAccount.client_email,
+      sub: serviceAccount.client_email,
+      aud: 'https://oauth2.googleapis.com/token',
+      iat: now,
+      exp: now + 3600,
+      scope: 'https://www.googleapis.com/auth/identitytoolkit',
+    },
+    serviceAccount
+  );
 
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
@@ -71,18 +88,19 @@ async function getUserByEmail(email, projectId, accessToken) {
   return data.users[0];
 }
 
-async function createCustomToken(uid, serviceAccount) {
-  const privateKey = await importPKCS8(normalizePrivateKey(serviceAccount.private_key), 'RS256');
+function createCustomToken(uid, serviceAccount) {
   const now = Math.floor(Date.now() / 1000);
-
-  return new SignJWT({ uid })
-    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
-    .setIssuer(serviceAccount.client_email)
-    .setSubject(serviceAccount.client_email)
-    .setAudience('https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit')
-    .setIssuedAt(now)
-    .setExpirationTime(now + 3600)
-    .sign(privateKey);
+  return signJwt(
+    {
+      iss: serviceAccount.client_email,
+      sub: serviceAccount.client_email,
+      aud: 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit',
+      iat: now,
+      exp: now + 3600,
+      uid,
+    },
+    serviceAccount
+  );
 }
 
 export async function handler(event) {
@@ -123,7 +141,7 @@ export async function handler(event) {
     const serviceAccount = getServiceAccount();
     const accessToken = await getGoogleAccessToken(serviceAccount);
     const user = await getUserByEmail(adminEmail, serviceAccount.project_id, accessToken);
-    const token = await createCustomToken(user.localId, serviceAccount);
+    const token = createCustomToken(user.localId, serviceAccount);
 
     return {
       statusCode: 200,
