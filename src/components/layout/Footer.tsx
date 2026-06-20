@@ -14,9 +14,23 @@ export default function Footer() {
   return (
     <footer id="footer-section" className="bg-espresso text-cream/70 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 sm:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 sm:gap-8">
+          {/* Brand */}
+          <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
+            <Link to="/" className="inline-flex mb-4 group" aria-label="Kalarang Silks and Studio — Home">
+              <img
+                src="/kalarang-logo.jpeg"
+                alt="Kalarang Silks & Studio"
+                className="h-16 sm:h-[4.5rem] w-auto max-w-[240px] object-contain object-left drop-shadow-md group-hover:opacity-95 transition-opacity"
+              />
+            </Link>
+            <p className="text-sm leading-relaxed max-w-xs">
+              {brand.tagline}. Curated sarees, hand-painted artistry, and custom tailoring.
+            </p>
+          </div>
+
           {/* Shop */}
-          <div>
+          <div className="text-center sm:text-left">
             <h4 className="text-sm font-semibold text-white mb-5 tracking-wide">Shop</h4>
             <ul className="space-y-2.5 text-sm">
               <li>
@@ -40,7 +54,7 @@ export default function Footer() {
           </div>
 
           {/* Our story & policies */}
-          <div>
+          <div className="text-center sm:text-left">
             <h4 className="text-sm font-semibold text-white mb-5 tracking-wide">Our Story</h4>
             <ul className="space-y-2.5 text-sm">
               <li><Link to="/about" className="hover:text-white transition-colors">About Kalarang</Link></li>
@@ -51,12 +65,12 @@ export default function Footer() {
           </div>
 
           {/* Follow us */}
-          <div>
+          <div className="text-center sm:text-left">
             <h4 className="text-sm font-semibold text-white mb-5 tracking-wide">Follow us</h4>
             <p className="text-sm leading-relaxed mb-5">
               Follow {brand.name} on social media for new arrivals, studio updates, and styling inspiration.
             </p>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center sm:justify-start gap-4">
               <a
                 href="https://instagram.com"
                 target="_blank"

@@ -52,8 +52,8 @@ export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
     <header id="main-navbar" className="sticky top-0 z-40 bg-surface border-b border-border">
       {/* Top bar — search | logo | account + cart */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-3 items-center h-16 sm:h-[4.5rem]">
-          <div className="flex items-center justify-start">
+        <div className="relative flex items-center justify-between h-16 sm:h-[4.75rem]">
+          <div className="flex items-center justify-start min-w-[2.5rem] sm:min-w-[5rem] z-10">
             <button
               type="button"
               onClick={() => setSearchOpen(!searchOpen)}
@@ -64,18 +64,19 @@ export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
             </button>
           </div>
 
-          <Link to="/" className="flex flex-col items-center justify-center group">
+          <Link
+            to="/"
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center group z-20"
+            aria-label="Kalarang Silks and Studio — Home"
+          >
             <img
               src={LOGO_SRC}
-              alt="Kalarang"
-              className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover mb-0.5 group-hover:opacity-90 transition-opacity"
+              alt="Kalarang Silks & Studio"
+              className="h-11 sm:h-14 w-auto max-w-[160px] sm:max-w-[220px] object-contain object-center drop-shadow-sm group-hover:opacity-95 transition-opacity"
             />
-            <span className="font-serif text-lg sm:text-xl font-medium text-espresso tracking-wide leading-none">
-              Kalarang
-            </span>
           </Link>
 
-          <div className="flex items-center justify-end gap-1 sm:gap-2">
+          <div className="flex items-center justify-end gap-1 sm:gap-2 min-w-[2.5rem] sm:min-w-[5rem] z-10">
             <Link
               to="/admin/login"
               className="h-10 w-10 flex items-center justify-center text-espresso hover:text-tan transition-colors"
