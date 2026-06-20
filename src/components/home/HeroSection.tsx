@@ -55,7 +55,7 @@ export default function HeroSection({ banner, collageImages }: HeroSectionProps)
       aria-label="Featured saree collections"
     >
       {/* Base gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#2a0610] via-[#4a0412] to-[#1a1a1a]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1a0108] via-[#34020D] to-[#1a1a1a]" />
 
       {/* Animated pattern layer — changes per slide */}
       <AnimatePresence mode="wait">

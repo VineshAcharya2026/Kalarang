@@ -9,7 +9,7 @@ interface NavbarProps {
   onSearchChange?: (query: string) => void;
 }
 
-const LOGO_SRC = '/kalarang-logo.jpeg';
+const LOGO_SRC = '/kalarang.png';
 
 const STATIC_NAV = [
   { label: 'Shop All', href: '/collections/all' },
@@ -183,7 +183,7 @@ export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
 
       {/* Mobile menu */}
       {isOpen && (
-        <div className="lg:hidden border-t border-gold/20 bg-[#3a0310] px-4 py-4 space-y-1 max-h-[70vh] overflow-y-auto">
+        <div className="lg:hidden border-t border-gold/20 bg-[#2a0108] px-4 py-4 space-y-1 max-h-[70vh] overflow-y-auto">
           {[...STATIC_NAV, { label: 'Founder', href: '/founder' }].map((link) => (
             <Link
               key={link.href}

@@ -19,7 +19,7 @@ export default function Footer() {
           <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
             <Link to="/" className="inline-flex mb-4 group" aria-label="Kalarang Silks and Studio — Home">
               <img
-                src="/kalarang-logo.jpeg"
+                src="/kalarang.png"
                 alt="Kalarang Silks & Studio"
                 className="h-16 sm:h-[4.5rem] w-auto max-w-[240px] object-contain object-left drop-shadow-md group-hover:opacity-95 transition-opacity"
               />

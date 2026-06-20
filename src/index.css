@@ -7,12 +7,12 @@
   --color-cream: #FAFAFA;
   --color-surface: #FFFFFF;
   --color-espresso: #1A1A1A;
-  --color-maroon: #4a0412;
+  --color-maroon: #34020D;
   --color-gold: #d4af37;
   --color-sand: #F3F0EB;
   --color-muted: #737373;
   --color-border: #E5E5E5;
-  --color-brand-deep: #4a0412;
+  --color-brand-deep: #34020D;
   --color-brand-gold: #d4af37;
   --color-tan: #b8956f;
   --color-tan-dark: #9a7b5a;
@@ -66,7 +66,7 @@
 }
 
 .kit-btn-primary:hover {
-  background: #3a0310;
+  background: #2a0108;
 }
 
 .kit-btn-secondary {
