@@ -14,6 +14,9 @@ export type SeedProduct = {
   mrp: number;
   salePrice: number;
   images: string[];
+  details?: string;
+  videoUrl?: string;
+  allowAddToCart?: boolean;
   isFeatured: boolean;
   isNewArrival: boolean;
   inStock: boolean;
@@ -80,6 +83,8 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     colors: ['Crimson', 'Gold'],
     mrp: 22000,
     salePrice: 18499,
+    details: 'Pure silk Banarasi brocade with rich zari jaal work and a broad brocade border. Ideal for weddings and festive occasions.',
+    allowAddToCart: true,
     images: [
       'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
     ],

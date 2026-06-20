@@ -4,7 +4,7 @@ import { ShoppingCart, Heart, Star } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Product } from '../../types';
 import { useCartStore } from '../../store/cartStore';
-import { useSettings } from '../../hooks/useSettings';
+import { whatsAppUrl } from '../../constants/contact';
 
 interface ProductCardProps {
   product: Product;
@@ -13,7 +13,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, variant = 'default' }: ProductCardProps) {
   const { addItem } = useCartStore();
-  const { settings } = useSettings();
+  const showAddToCart = product.inStock && product.allowAddToCart !== false;
 
   const discountPercent = Math.round(
     ((product.mrp - product.salePrice) / product.mrp) * 100
@@ -110,9 +110,8 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              if (!settings?.whatsappNumber) return;
-              const clean = settings.whatsappNumber.replace(/[^0-9]/g, '');
-              window.open(`https://wa.me/${clean}`, '_blank');
+              const message = `Hi KALARANG! I'm interested in "${product.name}".`;
+              window.open(whatsAppUrl(message), '_blank');
             }}
             className="absolute top-3 right-3 h-9 w-9 rounded-full bg-white/95 shadow-md flex items-center justify-center text-muted hover:text-maroon opacity-0 group-hover:opacity-100 transition-opacity"
             aria-label="Enquire"
@@ -145,7 +144,7 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
         </div>
       </Link>
 
-      {product.inStock && (
+      {showAddToCart && (
         <div className="px-4 pb-4">
           <button
             type="button"

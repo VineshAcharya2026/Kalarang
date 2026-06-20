@@ -14,6 +14,9 @@ export interface Product {
   mrp: number;
   salePrice: number;
   images: string[];
+  details?: string;
+  videoUrl?: string;
+  allowAddToCart?: boolean;
   isFeatured: boolean;    // maps to core isFeatured
   isNewArrival: boolean;  // maps to core isNewArrival
   inStock: boolean;

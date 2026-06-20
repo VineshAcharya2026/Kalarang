@@ -5,12 +5,12 @@ import { motion } from 'motion/react';
 import { useProducts } from '../hooks/useProducts';
 import { useCollections } from '../hooks/useCollections';
 import { useCartStore } from '../store/cartStore';
-import { useSettings } from '../hooks/useSettings';
 import ProductGrid from '../components/products/ProductGrid';
 import AnnouncementBar from '../components/layout/AnnouncementBar';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import WhatsAppFAB from '../components/layout/WhatsAppFAB';
+import { whatsAppUrl, KALARANG_WHATSAPP_DISPLAY } from '../constants/contact';
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -18,10 +18,9 @@ export default function ProductDetail() {
   const { products, loading: productsLoading } = useProducts();
   const { collections } = useCollections();
   const { addItem } = useCartStore();
-  const { settings } = useSettings();
 
-  // Selected State
   const [activeImage, setActiveImage] = useState<string>('');
+  const [showVideo, setShowVideo] = useState(false);
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [isAddedFeedback, setIsAddedFeedback] = useState<boolean>(false);
 
@@ -95,11 +94,11 @@ export default function ProductDetail() {
   };
 
   const handleWhatsAppEnquiry = () => {
-    if (!settings?.whatsappNumber) return;
-    const cleanNumber = settings.whatsappNumber.replace(/[^0-9]/g, '');
-    const messageText = `Hi KALARANG! I'm interested in [${product.name}] Saree from your "${collectionName}" collection, in the [${selectedColor}] color variant. Could you please share more details and availability? 🙏`;
-    window.open(`https://wa.me/${cleanNumber}?text=${encodeURIComponent(messageText)}`, '_blank');
+    const messageText = `Hi KALARANG! I'm interested in the "${product.name}" saree (₹${product.salePrice.toLocaleString('en-IN')}). Please share more details.`;
+    window.open(whatsAppUrl(messageText), '_blank');
   };
+
+  const showAddToCart = product.inStock && product.allowAddToCart !== false;
 
   const imagesList = product.images && product.images.length > 0 ? product.images : [
     'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80'
@@ -127,13 +126,22 @@ export default function ProductDetail() {
           
           {/* Saree Images Canvas / Gallery */}
           <div className="flex flex-col gap-4">
-            <div className="relative aspect-[3/4] bg-[#E8D5B0]/25 border border-[#B8860B]/10 overflow-hidden rounded">
-              <img
-                src={activeImage || imagesList[0]}
-                alt={product.name}
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover"
-              />
+            <div className="relative aspect-[3/4] bg-[#E8D5B0]/25 border border-[#B8860B]/10 overflow-hidden rounded home-card">
+              {showVideo && product.videoUrl ? (
+                <video
+                  src={product.videoUrl}
+                  controls
+                  className="w-full h-full object-cover"
+                  poster={imagesList[0]}
+                />
+              ) : (
+                <img
+                  src={activeImage || imagesList[0]}
+                  alt={product.name}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                />
+              )}
               
               {/* Sold out stamp on details */}
               {!product.inStock && (
@@ -146,12 +154,28 @@ export default function ProductDetail() {
             </div>
 
             {/* Thumbnail Navigation Carousel */}
-            {imagesList.length > 1 && (
+            {(imagesList.length > 1 || product.videoUrl) && (
               <div className="flex gap-3 overflow-x-auto pb-1">
+                {product.videoUrl && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowVideo(true);
+                    }}
+                    className={`relative w-20 aspect-[3/4] overflow-hidden rounded border-2 flex items-center justify-center bg-maroon/10 cursor-pointer ${
+                      showVideo ? 'border-[#7A1C2E]' : 'border-[#B8860B]/10'
+                    }`}
+                  >
+                    <span className="text-[10px] font-bold text-maroon uppercase">Video</span>
+                  </button>
+                )}
                 {imagesList.map((img, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setActiveImage(img)}
+                    onClick={() => {
+                      setShowVideo(false);
+                      setActiveImage(img);
+                    }}
                     className={`relative w-20 aspect-[3/4] overflow-hidden rounded bg-[#E8D5B0]/30 border-2 transition-all cursor-pointer ${
                       activeImage === img ? 'border-[#7A1C2E] scale-95 shadow-md' : 'border-[#B8860B]/10 hover:border-[#B8860B]/30'
                     }`}
@@ -214,37 +238,8 @@ export default function ProductDetail() {
               </p>
             </div>
 
-            {/* Color variants selector chips */}
-            {product.colors && product.colors.length > 0 && (
-              <div>
-                <h4 className="text-xs font-bold text-[#1C1008] uppercase tracking-wider mb-2.5">
-                  Available Colorways: {selectedColor}
-                </h4>
-                <div className="flex flex-wrap gap-2">
-                  {product.colors.map((color) => {
-                    const isSelected = selectedColor === color;
-                    return (
-                      <button
-                        key={color}
-                        onClick={() => setSelectedColor(color)}
-                        className={`px-3.5 py-2 text-xs font-sans font-medium rounded border flex items-center gap-1.5 transition-all cursor-pointer ${
-                          isSelected
-                            ? 'bg-[#1C1008] text-[#FDF8F2] border-transparent shadow'
-                            : 'bg-[#FDF8F2] text-[#1C1008] border-[#B8860B]/20 hover:border-[#7A1C2E]'
-                        }`}
-                      >
-                        {isSelected && <Check className="h-3 w-3 shrink-0" />}
-                        {color}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* CTAs Trigger Area */}
             <div className="flex flex-col sm:flex-row gap-3.5 mt-2">
-              {product.inStock ? (
+              {showAddToCart ? (
                 <button
                   onClick={handleAddToCart}
                   className={`flex-1 py-4.5 px-6 rounded text-xs tracking-widest font-sans font-bold uppercase transition-all flex items-center justify-center gap-2 cursor-pointer ${
@@ -261,72 +256,45 @@ export default function ProductDetail() {
                   ) : (
                     <>
                       <ShoppingCart className="h-4.5 w-4.5 shrink-0" />
-                      Add to Shopping Cart
+                      Add to Cart
                     </>
                   )}
                 </button>
-              ) : (
+              ) : product.inStock ? null : (
                 <button
                   disabled
                   className="flex-grow py-4.5 px-6 rounded text-xs tracking-widest font-sans font-bold uppercase cursor-not-allowed bg-gray-200 text-gray-400 flex items-center justify-center"
                 >
-                  Sold Out Design
+                  Sold Out
                 </button>
               )}
 
               <button
                 onClick={handleWhatsAppEnquiry}
-                className="bg-[#FDF8F2] hover:bg-[#7A1C2E]/5 text-[#7A1C2E] hover:text-[#7A1C2E] py-4.5 px-6 rounded text-xs tracking-widest font-sans font-bold uppercase transition-all border border-[#7A1C2E]/20 flex items-center justify-center gap-2 cursor-pointer"
+                className="flex-1 bg-[#25D366] hover:bg-[#20bd5a] text-white py-4.5 px-6 rounded text-xs tracking-widest font-sans font-bold uppercase transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
               >
                 <MessageSquare className="h-4.5 w-4.5 shrink-0" />
-                Enquire on WhatsApp
+                WhatsApp {KALARANG_WHATSAPP_DISPLAY}
               </button>
             </div>
 
-            {/* Technical Specifications Specs Grid */}
+            {/* Product details */}
             <div className="border-t border-[#B8860B]/10 pt-6">
-              <h3 className="font-serif text-lg font-bold text-[#1C1008] uppercase mb-4 tracking-wider">
-                Saree Overview & Features
+              <h3 className="font-serif text-lg font-bold text-[#1C1008] uppercase mb-3 tracking-wider">
+                Details
               </h3>
-              
-              <div className="grid grid-cols-2 gap-4 text-xs sm:text-sm font-sans mb-4">
-                <div className="bg-[#E8D5B0]/15 p-3 rounded">
-                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Loom Fabric</span>
-                  <strong className="text-[#1C1008]">{product.fabric}</strong>
-                </div>
-                <div className="bg-[#E8D5B0]/15 p-3 rounded">
-                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Work / Motif</span>
-                  <strong className="text-[#1C1008]">{product.work || 'Pure Handloom Work'}</strong>
-                </div>
-                <div className="bg-[#E8D5B0]/15 p-3 rounded">
-                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Border Details</span>
-                  <strong className="text-[#1C1008]">{product.border || 'Zari Border'}</strong>
-                </div>
-                <div className="bg-[#E8D5B0]/15 p-3 rounded">
-                  <span className="text-[10px] text-gray-500 block uppercase font-medium">Texture Style</span>
-                  <strong className="text-[#1C1008]">{product.texture || 'Soft Comfort Velvet'}</strong>
-                </div>
-              </div>
-
-              {/* Recommended Occasions Chips */}
-              {product.occasions && product.occasions.length > 0 && (
-                <div className="mt-4">
-                  <span className="text-xs font-semibold text-gray-500 uppercase block mb-2">Recommended Occasion Tags:</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {product.occasions.map((occ) => (
-                      <span
-                        key={occ}
-                        className="bg-[#B8860B]/10 text-[#B8860B] border border-[#B8860B]/15 text-[10px] px-2.5 py-0.5 rounded-full font-sans uppercase font-bold"
-                      >
-                        {occ}
-                      </span>
-                    ))}
-                  </div>
-                </div>
+              {product.details ? (
+                <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                  {product.details}
+                </p>
+              ) : (
+                <p className="text-sm text-gray-500 italic">
+                  Handcrafted saree from our {collectionName} collection.
+                </p>
               )}
             </div>
 
-            {/* Shopping Guarantees Trust elements */}
+            {/* Trust elements */}
             <div className="border-t border-[#B8860B]/10 pt-6 grid grid-cols-3 gap-2 text-center text-[10px] sm:text-xs text-gray-500 font-sans mt-4">
               <div className="flex flex-col items-center gap-1">
                 <Truck className="h-5 w-5 text-[#B8860B]" />

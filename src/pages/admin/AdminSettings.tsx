@@ -10,7 +10,7 @@ export default function AdminSettings() {
   const [logoText, setLogoText] = useState('KALARANG');
   const [announcementText, setAnnouncementText] = useState('✨ Handcrafted pure Banarasi silk sarees on display at our Studio Lobby. Buy now! ✨');
   const [showAnnouncement, setShowAnnouncement] = useState(true);
-  const [whatsappNumber, setWhatsappNumber] = useState('+91 98765 43210');
+  const [whatsappNumber, setWhatsappNumber] = useState('+91 98869 43080');
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(5000);
 
   // Status indicators
@@ -23,7 +23,7 @@ export default function AdminSettings() {
       setLogoText(settings.storeName || 'KALARANG');
       setAnnouncementText(settings.announcementBar?.text || '');
       setShowAnnouncement(settings.announcementBar?.enabled ?? true);
-      setWhatsappNumber(settings.whatsappNumber || '+91 98765 43210');
+      setWhatsappNumber(settings.whatsappNumber || '+91 98869 43080');
       setFreeShippingThreshold(settings.freeShippingThreshold || 5000);
     }
   }, [settings]);
