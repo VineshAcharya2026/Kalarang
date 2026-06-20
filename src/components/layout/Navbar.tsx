@@ -52,7 +52,7 @@ export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
     <header id="main-navbar" className="sticky top-0 z-40 bg-maroon border-b border-gold/20 shadow-md">
       {/* Top bar — search | logo | account + cart */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="relative flex items-center justify-between h-20 sm:h-24">
+        <div className="relative flex items-center justify-between h-24 sm:h-28 lg:h-32">
           <div className="flex items-center justify-start min-w-[2.5rem] sm:min-w-[5rem] z-10">
             <button
               type="button"
@@ -72,7 +72,7 @@ export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
             <img
               src={LOGO_SRC}
               alt="Kalarang Silks & Studio"
-              className="h-16 sm:h-[5.5rem] lg:h-24 w-auto max-w-[220px] sm:max-w-[300px] lg:max-w-[340px] object-contain object-center group-hover:opacity-95 transition-opacity"
+              className="h-20 sm:h-28 lg:h-[7.5rem] w-auto max-w-[260px] sm:max-w-[380px] lg:max-w-[440px] object-contain object-center group-hover:opacity-95 transition-opacity"
             />
           </Link>
 

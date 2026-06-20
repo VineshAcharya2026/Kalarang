@@ -21,7 +21,7 @@ export default function Footer() {
               <img
                 src="/kalarang.png"
                 alt="Kalarang Silks & Studio"
-                className="h-16 sm:h-[4.5rem] w-auto max-w-[240px] object-contain object-left drop-shadow-md group-hover:opacity-95 transition-opacity"
+                className="h-20 sm:h-24 w-auto max-w-[280px] object-contain object-left drop-shadow-md group-hover:opacity-95 transition-opacity"
               />
             </Link>
             <p className="text-sm leading-relaxed max-w-xs">
