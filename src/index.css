@@ -166,3 +166,48 @@
   border-radius: var(--radius-home);
   box-shadow: var(--shadow-soft);
 }
+
+/* Hero carousel — Indian textile pattern backgrounds */
+.hero-pattern-brocade {
+  opacity: 0.18;
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4af37' fill-opacity='0.8'%3E%3Cpath d='M30 5c-2 4-6 6-10 6 4 0 8 2 10 6 2-4 6-6 10-6-4 0-8-2-10-6zm0 44c-2 4-6 6-10 6 4 0 8 2 10 6 2-4 6-6 10-6-4 0-8-2-10-6zM5 30c4-2 6-6 6-10 0 4-2 8-6 10 4 2 6 6 6 10 0-4 2-8 6-10zm44 0c4-2 6-6 6-10 0 4-2 8-6 10 4 2 6 6 6 10 0-4 2-8 6-10z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+.hero-pattern-temple {
+  opacity: 0.15;
+  background-image: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 28px,
+      rgb(212 175 55 / 0.35) 28px,
+      rgb(212 175 55 / 0.35) 30px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 28px,
+      rgb(212 175 55 / 0.2) 28px,
+      rgb(212 175 55 / 0.2) 30px
+    );
+}
+
+.hero-pattern-paisley {
+  opacity: 0.2;
+  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23d4af37' stroke-width='1.2' opacity='0.7'%3E%3Cpath d='M40 8c-8 12-20 16-20 28 0 8 6 14 14 14 6 0 12-4 14-10 2 6 8 10 14 10 8 0 14-6 14-14 0-12-12-16-20-28 0 10-6 18-16 18s-16-8-16-18z'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 80px 80px;
+}
+
+.hero-pattern-buti {
+  opacity: 0.22;
+  background-image: radial-gradient(circle, rgb(212 175 55 / 0.55) 1.5px, transparent 1.5px),
+    radial-gradient(circle, rgb(184 149 111 / 0.35) 1px, transparent 1px);
+  background-size: 24px 24px, 16px 16px;
+  background-position: 0 0, 8px 8px;
+}
+
+.hero-pattern-peacock {
+  opacity: 0.16;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23d4af37' stroke-width='1'%3E%3Ccircle cx='50' cy='50' r='18'/%3E%3Ccircle cx='50' cy='50' r='10'/%3E%3Cpath d='M50 32v36M32 50h36M38 38l24 24M62 38L38 62'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 100px 100px;
+}

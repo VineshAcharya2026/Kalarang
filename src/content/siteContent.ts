@@ -17,6 +17,49 @@ export const hero = {
   secondaryCta: { label: 'Explore Our Collections', href: '/collections/all' },
 };
 
+export const heroSlides = [
+  {
+    id: 'banarasi-brocade',
+    image:
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1400&q=80',
+    pattern: 'Banarasi Brocade',
+    tagline: 'Zari jaal woven through pure silk',
+    patternClass: 'hero-pattern-brocade',
+  },
+  {
+    id: 'kanjivaram-temple',
+    image:
+      'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1400&q=80',
+    pattern: 'Kanjivaram Temple Border',
+    tagline: 'Contrast borders & temple motifs',
+    patternClass: 'hero-pattern-temple',
+  },
+  {
+    id: 'paisley-jaal',
+    image:
+      'https://images.unsplash.com/photo-1610030469854-2c069b3f3b90?auto=format&fit=crop&w=1400&q=80',
+    pattern: 'Paisley Jaal',
+    tagline: 'Classic mango motifs in flowing repeat',
+    patternClass: 'hero-pattern-paisley',
+  },
+  {
+    id: 'chanderi-buti',
+    image:
+      'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=1400&q=80',
+    pattern: 'Chanderi Buti',
+    tagline: 'Delicate florals on sheer cotton-silk',
+    patternClass: 'hero-pattern-buti',
+  },
+  {
+    id: 'peacock-paithani',
+    image:
+      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=1400&q=80',
+    pattern: 'Peacock Paithani',
+    tagline: 'Heritage pallu with jewel-toned weave',
+    patternClass: 'hero-pattern-peacock',
+  },
+] as const;
+
 export const about = {
   eyebrow: 'About KalaRang',
   title: 'The Story Behind KalaRang',

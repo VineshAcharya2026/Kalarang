@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { brand, hero } from '../../content/siteContent';
+import { motion, AnimatePresence } from 'motion/react';
+import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { brand, hero, heroSlides } from '../../content/siteContent';
 import type { Banner } from '../../types';
 
 interface HeroSectionProps {
@@ -9,120 +10,219 @@ interface HeroSectionProps {
   collageImages?: string[];
 }
 
-const DEFAULT_COLLAGE = [
-  'https://images.unsplash.com/photo-1610030469854-2c069b3f3b90?auto=format&fit=crop&w=400&q=80',
-  'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=400&q=80',
-  'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=400&q=80',
-  'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=400&q=80',
-  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80',
-];
-
-const COLLAGE_LAYOUT = [
-  { className: 'top-[8%] left-[5%] w-[38%] h-[42%] -rotate-6 z-10' },
-  { className: 'top-[4%] right-[8%] w-[34%] h-[38%] rotate-3 z-20' },
-  { className: 'top-[38%] left-[18%] w-[32%] h-[36%] rotate-2 z-30' },
-  { className: 'top-[42%] right-[4%] w-[36%] h-[40%] -rotate-4 z-20' },
-  { className: 'bottom-[6%] left-[32%] w-[34%] h-[38%] rotate-1 z-10' },
-];
+const AUTOPLAY_MS = 5500;
+const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function HeroSection({ banner, collageImages }: HeroSectionProps) {
-  const images = collageImages?.length
-    ? [...collageImages, ...DEFAULT_COLLAGE].slice(0, 5)
-    : [banner.imageUrl, ...DEFAULT_COLLAGE].slice(0, 5);
+  const slides = useMemo(() => {
+    return heroSlides.map((slide, i) => ({
+      ...slide,
+      image: collageImages?.[i] || slide.image,
+    }));
+  }, [collageImages]);
+
+  const [current, setCurrent] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  const goTo = useCallback(
+    (index: number) => {
+      setCurrent((index + slides.length) % slides.length);
+    },
+    [slides.length]
+  );
+
+  const next = useCallback(() => goTo(current + 1), [current, goTo]);
+  const prev = useCallback(() => goTo(current - 1), [current, goTo]);
+
+  useEffect(() => {
+    if (isPaused) return;
+    const timer = setInterval(next, AUTOPLAY_MS);
+    return () => clearInterval(timer);
+  }, [isPaused, next]);
 
   const scrollToProducts = () => {
     document.getElementById('featured-products')?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const activeSlide = slides[current];
+
   return (
-    <section id="hero-banner" className="bg-cream border-b border-border/60">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-4 items-center min-h-[520px] sm:min-h-[580px] py-12 sm:py-16 lg:py-20">
-          {/* Copy — left */}
-          <div className="flex flex-col items-start justify-center order-2 lg:order-1 px-2 sm:px-6 lg:px-10">
-            <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-[10px] sm:text-xs font-sans font-medium tracking-[0.2em] text-muted uppercase"
-            >
-              {import.meta.env.VITE_APP_URL?.replace('https://', 'WWW.').toUpperCase() || 'WWW.KALARANG.COM'}
-            </motion.p>
+    <section
+      id="hero-banner"
+      className="relative overflow-hidden min-h-[620px] sm:min-h-[680px] lg:min-h-[720px]"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      aria-label="Featured saree collections"
+    >
+      {/* Base gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#2a0610] via-[#4a0412] to-[#1a1a1a]" />
 
-            <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="text-xs sm:text-sm font-sans font-semibold tracking-[0.25em] text-espresso uppercase mt-6"
-            >
-              {hero.eyebrow}
-            </motion.p>
+      {/* Animated pattern layer — changes per slide */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeSlide.patternClass}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8 }}
+          className={`absolute inset-0 ${activeSlide.patternClass}`}
+          aria-hidden
+        />
+      </AnimatePresence>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="font-serif text-[5rem] sm:text-[6.5rem] lg:text-[7.5rem] font-medium text-tan leading-none tracking-tight mt-2"
-            >
-              NEW
-            </motion.h1>
+      {/* Gold shimmer overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.07] mix-blend-overlay pointer-events-none"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle at 20% 30%, #d4af37 0%, transparent 40%), radial-gradient(circle at 80% 70%, #b8956f 0%, transparent 35%)',
+        }}
+        aria-hidden
+      />
 
-            <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="font-serif text-lg sm:text-xl text-espresso/80 mt-4 max-w-sm leading-snug"
-            >
-              {banner.headline || hero.headline}
-            </motion.p>
+      {/* Vignette */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#1a0510]/90 via-[#1a0510]/50 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#1a0510]/80 via-transparent to-[#1a0510]/30 pointer-events-none" />
 
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="mt-8"
-            >
-              <button type="button" onClick={scrollToProducts} className="kanya-btn">
-                Shop Now
-              </button>
-            </motion.div>
-
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.25 }}
-              className="text-xs text-muted mt-6 max-w-md leading-relaxed hidden sm:block"
-            >
-              {banner.subtext || hero.subtext}
-            </motion.p>
-
-            <Link
-              to={hero.primaryCta.href}
-              className="text-xs font-semibold text-tan hover:text-tan-dark mt-4 uppercase tracking-wider underline-offset-4 hover:underline"
-            >
-              {hero.primaryCta.label}
-            </Link>
-          </div>
-
-          {/* Collage — right */}
+      {/* Carousel images */}
+      <div className="absolute inset-0 lg:left-[38%]">
+        <AnimatePresence mode="wait">
           <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
+            key={activeSlide.id}
+            initial={{ opacity: 0, scale: 1.06 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="relative order-1 lg:order-2 w-full aspect-square max-w-lg mx-auto lg:max-w-none lg:min-h-[480px]"
+            exit={{ opacity: 0, scale: 1.02 }}
+            transition={{ duration: 0.9, ease }}
+            className="absolute inset-0"
           >
-            {images.map((src, i) => (
-              <div key={i} className={`hero-collage-item ${COLLAGE_LAYOUT[i].className}`}>
-                <img
-                  src={src}
-                  alt={`${brand.name} collection ${i + 1}`}
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover rounded-[var(--radius-home)]"
-                />
-              </div>
-            ))}
+            <img
+              src={activeSlide.image}
+              alt={`${activeSlide.pattern} saree`}
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover object-top lg:object-center"
+            />
+            <div className="absolute inset-0 bg-gradient-to-l from-transparent via-[#1a0510]/20 to-[#1a0510]/70 lg:via-[#1a0510]/10 lg:to-[#1a0510]/40" />
           </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full min-h-[620px] sm:min-h-[680px] lg:min-h-[720px] flex flex-col justify-end lg:justify-center pb-10 sm:pb-12 lg:pb-0">
+        <div className="max-w-xl">
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-[10px] sm:text-xs font-sans font-medium tracking-[0.25em] text-gold/80 uppercase"
+          >
+            {brand.tagline}
+          </motion.p>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeSlide.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.5, ease }}
+            >
+              <span className="inline-flex items-center gap-1.5 mt-4 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-gold/30 text-[10px] sm:text-xs font-semibold text-gold uppercase tracking-wider">
+                <Sparkles className="h-3 w-3" />
+                {activeSlide.pattern}
+              </span>
+
+              <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-medium text-white leading-[1.05] tracking-tight mt-5">
+                {hero.headline.split(' ').slice(0, 2).join(' ')}
+                <span className="block text-tan mt-1">
+                  {hero.headline.split(' ').slice(2).join(' ')}
+                </span>
+              </h1>
+
+              <p className="font-sans text-sm sm:text-base text-white/75 mt-4 max-w-md leading-relaxed">
+                {activeSlide.tagline}. {banner.subtext || hero.subtext}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-wrap items-center gap-3 mt-8"
+          >
+            <button
+              type="button"
+              onClick={scrollToProducts}
+              className="kanya-btn rounded-full !px-7 shadow-lg shadow-tan/20 hover:shadow-tan/30 transition-shadow"
+            >
+              Shop Now
+            </button>
+            <Link
+              to={hero.secondaryCta.href}
+              className="inline-flex items-center justify-center px-7 py-3 rounded-full text-[11px] font-bold uppercase tracking-wider text-white border border-white/30 hover:bg-white/10 backdrop-blur-sm transition-colors"
+            >
+              {hero.secondaryCta.label}
+            </Link>
+          </motion.div>
+
+          {/* Slide indicators + pattern strip */}
+          <div className="mt-10 lg:mt-12">
+            <div className="flex items-center gap-2 mb-4">
+              {slides.map((slide, i) => (
+                <button
+                  key={slide.id}
+                  type="button"
+                  onClick={() => goTo(i)}
+                  aria-label={`View ${slide.pattern}`}
+                  aria-current={i === current ? 'true' : undefined}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${
+                    i === current
+                      ? 'w-10 bg-gold'
+                      : 'w-3 bg-white/30 hover:bg-white/50'
+                  }`}
+                />
+              ))}
+            </div>
+
+            <div className="hidden sm:flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+              {slides.map((slide, i) => (
+                <button
+                  key={slide.id}
+                  type="button"
+                  onClick={() => goTo(i)}
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-[10px] font-semibold uppercase tracking-wider transition-all duration-300 border ${
+                    i === current
+                      ? 'bg-gold/20 border-gold/50 text-gold'
+                      : 'bg-white/5 border-white/10 text-white/50 hover:text-white/80 hover:border-white/25'
+                  }`}
+                >
+                  {slide.pattern}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Carousel arrows */}
+      <button
+        type="button"
+        onClick={prev}
+        aria-label="Previous slide"
+        className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-white/20 transition-colors"
+      >
+        <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
+      </button>
+      <button
+        type="button"
+        onClick={next}
+        aria-label="Next slide"
+        className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white flex items-center justify-center hover:bg-white/20 transition-colors"
+      >
+        <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
+      </button>
+
+      {/* Decorative border frame */}
+      <div className="absolute inset-x-4 sm:inset-x-8 top-4 bottom-4 sm:top-6 sm:bottom-6 border border-gold/10 rounded-3xl pointer-events-none z-10" />
     </section>
   );
 }
