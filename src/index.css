@@ -1,17 +1,29 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500;600;705;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-serif: "Cormorant Garamond", Georgia, serif;
-  --font-sans: "DM Sans", system-ui, sans-serif;
-  --color-cream: #FDF8F2;
-  --color-espresso: #1C1008;
-  --color-maroon: #7A1C2E;
-  --color-gold: #B8860B;
-  --color-sand: #E8D5B0;
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+  --color-cream: #FAFAFA;
+  --color-surface: #FFFFFF;
+  --color-espresso: #1A1A1A;
+  --color-maroon: #4a0412;
+  --color-gold: #d4af37;
+  --color-sand: #F3F0EB;
+  --color-muted: #737373;
+  --color-border: #E5E5E5;
+  --color-brand-deep: #4a0412;
+  --color-brand-gold: #d4af37;
+  --color-tan: #b8956f;
+  --color-tan-dark: #9a7b5a;
+  --radius-kit: 16px;
+  --shadow-kit: 0 1px 3px rgb(0 0 0 / 0.06), 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-kit-lg: 0 10px 40px rgb(0 0 0 / 0.08);
+  --shadow-soft: 0 4px 20px rgb(0 0 0 / 0.06);
+  --shadow-soft-hover: 0 12px 32px rgb(0 0 0 / 0.09);
+  --radius-home: 20px;
 }
 
-/* Elegant scrollbar styling for collections and tables */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
@@ -20,7 +32,80 @@
   scrollbar-width: none;
 }
 
-/* Custom fade transitions */
+.kit-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-kit);
+  box-shadow: var(--shadow-kit);
+}
+
+.home-card {
+  border-radius: var(--radius-home);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
+  background: var(--color-surface);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.home-card:hover {
+  box-shadow: var(--shadow-soft-hover);
+}
+
+.kit-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: white;
+  background: var(--color-maroon);
+  border-radius: 9999px;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.kit-btn-primary:hover {
+  background: #3a0310;
+}
+
+.kit-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-espresso);
+  background: var(--color-cream);
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.kit-btn-secondary:hover {
+  border-color: var(--color-gold);
+  background: white;
+}
+
+.kit-input {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  font-size: 0.8125rem;
+  color: var(--color-espresso);
+  background: var(--color-cream);
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.kit-input:focus {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgb(212 175 55 / 0.15);
+}
+
 .fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }
@@ -34,4 +119,50 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* Kanya-inspired storefront styles */
+.kanya-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 2rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: white;
+  background: var(--color-tan);
+  border: none;
+  transition: background 0.2s;
+}
+
+.kanya-btn:hover {
+  background: var(--color-tan-dark);
+}
+
+.kanya-btn-dark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 2.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: white;
+  background: var(--color-espresso);
+  border: none;
+  transition: opacity 0.2s;
+}
+
+.kanya-btn-dark:hover {
+  opacity: 0.85;
+}
+
+.hero-collage-item {
+  position: absolute;
+  overflow: hidden;
+  border-radius: var(--radius-home);
+  box-shadow: var(--shadow-soft);
 }

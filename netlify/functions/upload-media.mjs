@@ -1,5 +1,8 @@
 const MAX_BYTES = 900 * 1024; // ~900KB keeps Firestore docs safe
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'vineshjm@gmail.com';
+const ADMIN_EMAILS = [
+  process.env.ADMIN_EMAIL || 'admin@kalarang.com',
+  'vineshjm@gmail.com',
+];
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -34,9 +37,7 @@ async function verifyToken(idToken) {
 
   const data = await res.json();
   const user = data.users?.[0];
-  const verified = user?.emailVerified === true || user?.emailVerified === 'true';
-
-  if (!res.ok || !user || user.email !== ADMIN_EMAIL || !verified) {
+  if (!res.ok || !user || !ADMIN_EMAILS.includes(user.email)) {
     const err = new Error('Forbidden');
     err.statusCode = 403;
     throw err;

@@ -8,7 +8,6 @@ import {
   doc,
   query,
   where,
-  orderBy,
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -28,11 +27,7 @@ export function useProducts() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const q = query(
-      collection(db, 'products'),
-      where('isDeleted', '==', false),
-      orderBy('createdAt', 'desc')
-    );
+    const q = query(collection(db, 'products'), where('isDeleted', '==', false));
 
     const unsubscribe = onSnapshot(
       q,
@@ -41,6 +36,11 @@ export function useProducts() {
           id: snap.id,
           ...snap.data(),
         })) as Product[];
+        items.sort((a, b) => {
+          const aTime = a.createdAt?.seconds ?? 0;
+          const bTime = b.createdAt?.seconds ?? 0;
+          return bTime - aTime;
+        });
         setProducts(items);
         setLoading(false);
         setError(null);

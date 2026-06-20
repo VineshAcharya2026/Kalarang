@@ -18,7 +18,7 @@ export default function AdminSidebar() {
   const handleLogout = async () => {
     if (window.confirm('Are you sure you want to sign out from KALARANG Studio Admin?')) {
       await logoutAdmin();
-      navigate('/');
+      navigate('/admin/login');
     }
   };
 

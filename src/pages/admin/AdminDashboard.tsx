@@ -3,21 +3,25 @@ import { useProducts } from '../../hooks/useProducts';
 import { useCollections } from '../../hooks/useCollections';
 import { useOrders } from '../../hooks/useOrders';
 import { Order } from '../../types';
+import { seedCatalog } from '../../utils/seedCatalog';
 import { 
   ShoppingBag, 
   Sparkles, 
   AlertCircle, 
   FolderHeart, 
   TrendingUp, 
-  ExternalLink 
+  Database,
+  Loader2,
 } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const { products } = useProducts();
-  const { collections } = useCollections();
+  const { products, addProduct } = useProducts();
+  const { collections, addCollection } = useCollections();
   const { subscribeToOrders } = useOrders();
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  const [seeding, setSeeding] = useState(false);
+  const [seedMessage, setSeedMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Subscribe to Orders in real-time as mandated
   useEffect(() => {
@@ -45,6 +49,36 @@ export default function AdminDashboard() {
   const totalSalesRevenue = orders
     .filter((o) => o.status !== 'pending') // Only completed/confirmed orders contribute to definitive sales indicators
     .reduce((sum, o) => sum + o.total, 0);
+
+  const catalogEmpty = totalCollectionsCount === 0 && totalProductsCount === 0;
+
+  const handleLoadSampleCatalog = async () => {
+    setSeeding(true);
+    setSeedMessage(null);
+    try {
+      const result = await seedCatalog({
+        collectionsCount: totalCollectionsCount,
+        productsCount: totalProductsCount,
+        addCollection,
+        addProduct,
+      });
+      if (result.skipped) {
+        setSeedMessage({ type: 'error', text: 'Catalog already has data. Sample catalog was not added.' });
+      } else {
+        setSeedMessage({
+          type: 'success',
+          text: `Sample catalog loaded: ${result.collectionsAdded} categories and ${result.productsAdded} sarees.`,
+        });
+      }
+    } catch (err) {
+      setSeedMessage({
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Failed to load sample catalog.',
+      });
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const statsList = [
     {
@@ -85,6 +119,48 @@ export default function AdminDashboard() {
           Real-time status of KALARANG design catalogs and customer purchase enquiries.
         </p>
       </div>
+
+      {catalogEmpty && (
+        <div className="bg-[#FDF8F2] border border-[#B8860B]/20 rounded-md p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 bg-[#B8860B]/10 rounded-full shrink-0">
+              <Database className="h-5 w-5 text-[#B8860B]" />
+            </div>
+            <div>
+              <h2 className="font-serif text-lg font-bold text-[#1C1008] uppercase">
+                Empty Catalog
+              </h2>
+              <p className="text-xs text-gray-500 mt-1 max-w-md">
+                Load 5 sample categories and 5 saree products to populate the homepage instantly.
+              </p>
+              {seedMessage && (
+                <p
+                  className={`text-xs mt-2 font-medium ${
+                    seedMessage.type === 'success' ? 'text-green-700' : 'text-red-600'
+                  }`}
+                >
+                  {seedMessage.text}
+                </p>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleLoadSampleCatalog}
+            disabled={seeding}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#7A1C2E] text-white text-xs font-bold uppercase tracking-wider rounded-md hover:bg-[#5a1522] transition-colors disabled:opacity-60 shrink-0"
+          >
+            {seeding ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              'Load Sample Catalog'
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Metrics Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

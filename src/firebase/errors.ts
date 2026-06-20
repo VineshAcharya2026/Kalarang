@@ -15,7 +15,7 @@ export function getFirebaseErrorMessage(error: unknown, fallback: string): strin
     const fbError = error as FirebaseError;
     switch (fbError.code) {
       case 'permission-denied':
-        return 'Permission denied. Sign in as vineshjm@gmail.com with a verified email.';
+        return 'Permission denied. Sign in as admin@kalarang.com.';
       case 'unauthenticated':
         return 'Session expired. Please sign in again at /admin/login.';
       case 'not-found':

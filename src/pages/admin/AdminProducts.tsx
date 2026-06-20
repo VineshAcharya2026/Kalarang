@@ -4,6 +4,18 @@ import { useCollections } from '../../hooks/useCollections';
 import { uploadFiles } from '../../firebase/storageUpload';
 import { getFirebaseErrorMessage } from '../../firebase/errors';
 import { Product } from '../../types';
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Check,
+  X,
+  Image as ImageIcon,
+  Loader2,
+  FolderHeart,
+  Coins,
+  AlertCircle,
+} from 'lucide-react';
 
 function slugFromName(name: string): string {
   return name
@@ -12,21 +24,9 @@ function slugFromName(name: string): string {
     .trim()
     .replace(/\s+/g, '-');
 }
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Check, 
-  X, 
-  Image as ImageIcon, 
-  Loader2, 
-  FolderHeart, 
-  Coins,
-  AlertCircle
-} from 'lucide-react';
 
 export default function AdminProducts() {
-  const { products, addProduct, updateProduct, deleteProduct } = useProducts();
+  const { products, loading, error, addProduct, updateProduct, deleteProduct } = useProducts();
   const { collections } = useCollections();
 
   // Form toggles
@@ -246,9 +246,21 @@ export default function AdminProducts() {
         </button>
       </div>
 
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 text-red-700 p-4 rounded flex items-start gap-2 text-sm">
+          <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
+
       {/* Main product spreadsheet list */}
       <div className="bg-[#FDF8F2] border border-[#B8860B]/15 rounded py-4 shadow-sm overflow-hidden">
-        {products.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-16 text-gray-500 flex flex-col items-center gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-[#B8860B]" />
+            Loading product catalogue...
+          </div>
+        ) : products.length === 0 ? (
           <div className="text-center py-16 text-gray-400 font-serif italic text-base">
             No sarees added yet. Click "+ Add New Saree" to create your first design.
           </div>

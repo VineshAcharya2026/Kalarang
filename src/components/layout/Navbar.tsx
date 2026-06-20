@@ -1,274 +1,210 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ShoppingBag, Search } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, ShoppingBag, Search, User, ChevronDown } from 'lucide-react';
 import { useCollections } from '../../hooks/useCollections';
 import { useCartStore } from '../../store/cartStore';
 
 interface NavbarProps {
-  transparent?: boolean;
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
 }
 
-export default function Navbar({ transparent, searchQuery, onSearchChange }: NavbarProps) {
+const LOGO_SRC = '/kalarang-logo.jpeg';
+
+const STATIC_NAV = [
+  { label: 'Shop All', href: '/collections/all' },
+  { label: 'Services', href: '/services' },
+  { label: 'About', href: '/about' },
+  { label: 'Contact', href: '/contact' },
+];
+
+export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [localSearch, setLocalSearch] = useState('');
+  const [shopOpen, setShopOpen] = useState(false);
   const { collections } = useCollections();
   const { itemCount } = useCartStore();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const activeCollections = collections.filter((c) => c.isActive);
   const isHome = location.pathname === '/';
-  const useTransparent = transparent && isHome && !scrolled;
+  const query = searchQuery ?? localSearch;
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  const scrollToSection = (id: string) => {
-    setIsOpen(false);
-    if (location.pathname !== '/') {
-      return;
-    }
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  const setQuery = (value: string) => {
+    if (onSearchChange) onSearchChange(value);
+    else setLocalSearch(value);
   };
 
-  const navLinkClass = `font-sans text-sm font-medium transition-colors ${
-    useTransparent
-      ? 'text-cream hover:text-gold'
-      : 'text-espresso hover:text-maroon'
-  }`;
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSearchOpen(false);
+    if (!isHome) {
+      navigate('/', { state: { search: query.trim() } });
+      setIsOpen(false);
+      return;
+    }
+    document.getElementById('featured-products')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
-    <nav
-      id="main-navbar"
-      className={`sticky top-0 z-40 transition-all duration-300 ${
-        useTransparent
-          ? 'bg-transparent border-b border-transparent'
-          : 'bg-cream border-b border-gold/20 shadow-sm'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20">
-          <div className="flex-shrink-0 flex items-center">
-            <Link to="/" className="flex flex-col items-start leading-none group">
-              <span
-                id="brand-title"
-                className={`font-serif text-2xl font-bold tracking-[0.15em] transition-colors duration-300 ${
-                  useTransparent
-                    ? 'text-cream group-hover:text-gold'
-                    : 'text-espresso group-hover:text-maroon'
-                }`}
-              >
-                KALARANG
-              </span>
-              <span
-                id="brand-tagline"
-                className={`font-sans text-[9px] sm:text-[10px] tracking-[0.2em] uppercase font-semibold mt-0.5 ${
-                  useTransparent ? 'text-gold' : 'text-gold'
-                }`}
-              >
-                Silks & Studio
-              </span>
-            </Link>
+    <header id="main-navbar" className="sticky top-0 z-40 bg-surface border-b border-border">
+      {/* Top bar — search | logo | account + cart */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-3 items-center h-16 sm:h-[4.5rem]">
+          <div className="flex items-center justify-start">
+            <button
+              type="button"
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="h-10 w-10 flex items-center justify-center text-espresso hover:text-tan transition-colors"
+              aria-label="Search"
+            >
+              <Search className="h-5 w-5" />
+            </button>
           </div>
 
-          <div className="hidden lg:flex space-x-6 items-center">
-            <Link to="/" className={navLinkClass}>
-              Home
+          <Link to="/" className="flex flex-col items-center justify-center group">
+            <img
+              src={LOGO_SRC}
+              alt="Kalarang"
+              className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover mb-0.5 group-hover:opacity-90 transition-opacity"
+            />
+            <span className="font-serif text-lg sm:text-xl font-medium text-espresso tracking-wide leading-none">
+              Kalarang
+            </span>
+          </Link>
+
+          <div className="flex items-center justify-end gap-1 sm:gap-2">
+            <Link
+              to="/admin/login"
+              className="h-10 w-10 flex items-center justify-center text-espresso hover:text-tan transition-colors"
+              title="Account"
+            >
+              <User className="h-5 w-5" />
             </Link>
-
-            <div className="relative group text-inherit">
-              <button className={`${navLinkClass} flex items-center gap-1 py-4 focus:outline-none`}>
-                Collections
-              </button>
-              <div className="absolute left-0 mt-0 w-64 bg-cream border border-gold/10 rounded-md shadow-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
-                {activeCollections.length === 0 ? (
-                  <div className="px-4 py-2 text-xs font-sans text-gray-400">Loading...</div>
-                ) : (
-                  activeCollections.map((col) => (
-                    <Link
-                      key={col.id}
-                      to={`/collections/${col.slug}`}
-                      className="flex items-center gap-3 px-3 py-2 hover:bg-sand/40 transition-colors"
-                    >
-                      <div className="w-10 h-10 rounded overflow-hidden bg-sand/30 shrink-0 border border-gold/10">
-                        {col.coverImage && (
-                          <img
-                            src={col.coverImage}
-                            alt=""
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                          />
-                        )}
-                      </div>
-                      <span className="text-xs sm:text-sm font-sans text-espresso hover:text-maroon">
-                        {col.name}
-                      </span>
-                    </Link>
-                  ))
-                )}
-                <Link
-                  to="/collections/all"
-                  className="block px-4 py-2.5 text-xs font-bold text-maroon hover:bg-sand/40 border-t border-gold/10 mt-1 uppercase tracking-wider"
-                >
-                  View All Sarees →
-                </Link>
-              </div>
-            </div>
-
-            {isHome ? (
-              <>
-                <button onClick={() => scrollToSection('new-arrivals')} className={navLinkClass}>
-                  New Arrivals
-                </button>
-                <button onClick={() => scrollToSection('offers')} className={navLinkClass}>
-                  Offers
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/collections/all" className={navLinkClass}>
-                  New Arrivals
-                </Link>
-                <Link to="/collections/all" className={navLinkClass}>
-                  Offers
-                </Link>
-              </>
-            )}
-
-            <Link to="/about" className={navLinkClass}>
-              About
-            </Link>
-          </div>
-
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            {onSearchChange && (
-              <div className="hidden md:flex items-center relative">
-                <Search
-                  className={`absolute left-3 h-4 w-4 ${
-                    useTransparent ? 'text-cream/60' : 'text-gray-400'
-                  }`}
-                />
-                <input
-                  type="search"
-                  placeholder="Search sarees..."
-                  value={searchQuery ?? ''}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  className={`pl-9 pr-3 py-2 w-40 lg:w-48 text-xs rounded-full border focus:outline-none focus:ring-1 focus:ring-gold transition-colors ${
-                    useTransparent
-                      ? 'bg-white/10 border-white/20 text-cream placeholder:text-cream/50'
-                      : 'bg-cream border-gold/25 text-espresso placeholder:text-gray-400'
-                  }`}
-                />
-              </div>
-            )}
-
             <Link
               to="/cart"
-              className={`p-2 rounded-full transition-colors relative ${
-                useTransparent ? 'text-cream hover:text-gold' : 'text-espresso hover:text-maroon'
-              }`}
-              title="Shopping Bag"
+              className="relative h-10 w-10 flex items-center justify-center text-espresso hover:text-tan transition-colors"
+              title="Cart"
             >
               <ShoppingBag className="h-5 w-5" />
               {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-maroon text-cream font-semibold text-[10px] w-5 h-5 rounded-full flex items-center justify-center">
+                <span className="absolute top-1 right-1 min-w-[16px] h-4 rounded-full bg-espresso text-white text-[9px] font-bold flex items-center justify-center px-0.5">
                   {itemCount}
                 </span>
               )}
             </Link>
-
-            <div className="lg:hidden">
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className={`p-2 focus:outline-none ${
-                  useTransparent ? 'text-cream hover:text-gold' : 'text-espresso hover:text-maroon'
-                }`}
-              >
-                {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setIsOpen(!isOpen)}
+              className="lg:hidden h-10 w-10 flex items-center justify-center"
+              aria-label="Menu"
+            >
+              {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+
+        {/* Expandable search */}
+        {searchOpen && (
+          <form onSubmit={handleSearchSubmit} className="pb-4 border-t border-border/60 pt-3">
+            <div className="relative max-w-xl mx-auto">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
+              <input
+                type="search"
+                autoFocus
+                placeholder="Search sarees, fabrics..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 text-sm border border-border bg-cream focus:outline-none focus:border-tan"
+              />
+            </div>
+          </form>
+        )}
       </div>
 
+      {/* Category nav — desktop */}
+      <nav className="hidden lg:block border-t border-border/60 bg-surface">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <ul className="flex items-center justify-center gap-6 xl:gap-10 py-3.5 flex-wrap">
+            {STATIC_NAV.map((link) => (
+              <li key={link.href}>
+                <Link
+                  to={link.href}
+                  className={`text-[11px] font-semibold tracking-[0.15em] uppercase transition-colors ${
+                    location.pathname === link.href ? 'text-tan' : 'text-espresso hover:text-tan'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+            <li className="relative">
+              <button
+                type="button"
+                onClick={() => setShopOpen(!shopOpen)}
+                className="inline-flex items-center gap-1 text-[11px] font-semibold tracking-[0.15em] uppercase text-espresso hover:text-tan transition-colors"
+              >
+                Collections <ChevronDown className="h-3.5 w-3.5" />
+              </button>
+              {shopOpen && (
+                <>
+                  <button type="button" className="fixed inset-0 z-40" aria-label="Close" onClick={() => setShopOpen(false)} />
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full pt-2 z-50 w-52">
+                    <div className="bg-surface border border-border shadow-lg py-2">
+                      {activeCollections.map((col) => (
+                        <Link
+                          key={col.id}
+                          to={`/collections/${col.slug}`}
+                          onClick={() => setShopOpen(false)}
+                          className="block px-4 py-2.5 text-xs text-espresso hover:bg-cream hover:text-tan"
+                        >
+                          {col.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </li>
+            <li>
+              <Link
+                to="/collections/all?filter=sale"
+                className="text-[11px] font-semibold tracking-[0.15em] uppercase text-espresso hover:text-tan transition-colors"
+              >
+                Sale
+              </Link>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      {/* Mobile menu */}
       {isOpen && (
-        <div className="lg:hidden bg-cream border-t border-gold/10 py-3 space-y-1">
-          {onSearchChange && (
-            <div className="px-4 pb-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="search"
-                  placeholder="Search sarees..."
-                  value={searchQuery ?? ''}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2.5 text-sm rounded-lg border border-gold/25 bg-cream text-espresso focus:outline-none focus:ring-1 focus:ring-gold"
-                />
-              </div>
-            </div>
-          )}
-
-          <Link
-            to="/"
-            onClick={() => setIsOpen(false)}
-            className="block px-4 py-2.5 text-base font-sans font-medium text-espresso hover:bg-sand/50 hover:text-maroon"
-          >
-            Home
-          </Link>
-
-          <div className="px-4 py-1 text-xs font-sans tracking-widest text-gold font-semibold uppercase mt-1">
-            Collections
-          </div>
+        <div className="lg:hidden border-t border-border bg-surface px-4 py-4 space-y-1 max-h-[70vh] overflow-y-auto">
+          {[...STATIC_NAV, { label: 'Founder', href: '/founder' }].map((link) => (
+            <Link
+              key={link.href}
+              to={link.href}
+              onClick={() => setIsOpen(false)}
+              className="block py-3 text-sm font-medium tracking-wide uppercase text-espresso hover:text-tan border-b border-border/40"
+            >
+              {link.label}
+            </Link>
+          ))}
           {activeCollections.map((col) => (
             <Link
               key={col.id}
               to={`/collections/${col.slug}`}
               onClick={() => setIsOpen(false)}
-              className="block pl-8 pr-4 py-2 text-sm font-sans text-gray-700 hover:bg-sand/50 hover:text-maroon"
+              className="block py-2.5 text-sm text-muted hover:text-tan pl-2"
             >
               {col.name}
             </Link>
           ))}
-
-          {isHome ? (
-            <>
-              <button
-                onClick={() => scrollToSection('new-arrivals')}
-                className="block w-full text-left px-4 py-2.5 text-base font-sans font-medium text-espresso hover:bg-sand/50 hover:text-maroon"
-              >
-                New Arrivals
-              </button>
-              <button
-                onClick={() => scrollToSection('offers')}
-                className="block w-full text-left px-4 py-2.5 text-base font-sans font-medium text-espresso hover:bg-sand/50 hover:text-maroon"
-              >
-                Offers
-              </button>
-            </>
-          ) : (
-            <Link
-              to="/collections/all"
-              onClick={() => setIsOpen(false)}
-              className="block px-4 py-2.5 text-base font-sans font-medium text-espresso hover:bg-sand/50 hover:text-maroon"
-            >
-              Shop All
-            </Link>
-          )}
-
-          <Link
-            to="/about"
-            onClick={() => setIsOpen(false)}
-            className="block px-4 py-2.5 text-base font-sans font-medium text-espresso hover:bg-sand/50 hover:text-maroon border-t border-gold/5 mt-2"
-          >
-            About
-          </Link>
         </div>
       )}
-    </nav>
+    </header>
   );
 }

@@ -44,7 +44,7 @@ npm run build
 npx netlify deploy --prod --dir=dist
 ```
 
-**Admin login:** `/admin/login` — `vineshjm@gmail.com`
+**Admin login:** `/admin/login` — `admin@kalarang.com`
 
 ## Project structure
 

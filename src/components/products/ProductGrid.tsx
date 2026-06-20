@@ -6,11 +6,15 @@ import ProductCard from './ProductCard';
 interface ProductGridProps {
   products: Product[];
   emptyMessage?: string;
+  variant?: 'default' | 'minimal';
+  columns?: number;
 }
 
 export default function ProductGrid({
   products,
   emptyMessage = 'No exquisite sarees found matching your criteria.',
+  variant = 'default',
+  columns,
 }: ProductGridProps) {
   if (products.length === 0) {
     return (
@@ -41,16 +45,22 @@ export default function ProductGrid({
     show: { opacity: 1, y: 0 },
   };
 
+  const effectiveColumns = columns ?? (products.length <= 5 ? 5 : 4);
+  const gridColsClass =
+    effectiveColumns === 5
+      ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5'
+      : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
+
   return (
     <motion.div
       variants={container}
       initial="hidden"
       animate="show"
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+      className={`grid ${gridColsClass} gap-4 sm:gap-6 lg:gap-8`}
     >
       {products.map((product) => (
         <motion.div key={product.id} variants={item}>
-          <ProductCard product={product} />
+          <ProductCard product={product} variant={variant} />
         </motion.div>
       ))}
     </motion.div>

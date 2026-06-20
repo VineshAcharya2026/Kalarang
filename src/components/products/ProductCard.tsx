@@ -1,45 +1,28 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, MessageCircle, AlertCircle, Eye } from 'lucide-react';
+import { ShoppingCart, Heart, Star } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Product } from '../../types';
 import { useCartStore } from '../../store/cartStore';
 import { useSettings } from '../../hooks/useSettings';
-import { useCollections } from '../../hooks/useCollections';
 
 interface ProductCardProps {
   product: Product;
+  variant?: 'default' | 'minimal';
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, variant = 'default' }: ProductCardProps) {
   const { addItem } = useCartStore();
   const { settings } = useSettings();
-  const { collections } = useCollections();
-
-  const collectionObj = collections.find((c) => c.id === product.collectionId);
-  const collectionName = collectionObj ? collectionObj.name : 'Exclusive Saree';
 
   const discountPercent = Math.round(
     ((product.mrp - product.salePrice) / product.mrp) * 100
   );
 
-  const handleWhatsAppEnquiry = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!settings?.whatsappNumber) return;
-    const cleanNumber = settings.whatsappNumber.replace(/[^0-9]/g, '');
-    const defaultColor = (product.colors && product.colors[0]) || 'Standard';
-
-    const textMessage = `Hi KALARANG! I'm interested in the gorgeous [${product.name}] Saree from your "${collectionName}" fabrics, in the [${defaultColor}] color variant. Could you please share details on availability? 🙏`;
-    window.open(`https://wa.me/${cleanNumber}?text=${encodeURIComponent(textMessage)}`, '_blank');
-  };
-
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    const defaultColor = (product.colors && product.colors[0]) || 'StandardStyle';
+    const defaultColor = (product.colors && product.colors[0]) || 'Standard';
     addItem(product, defaultColor);
   };
 
@@ -47,14 +30,55 @@ export default function ProductCard({ product }: ProductCardProps) {
     (product.images && product.images[0]) ||
     'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80';
 
+  if (variant === 'minimal') {
+    return (
+      <article id={`product-card-${product.id}`} className="group flex flex-col h-full">
+        <Link to={`/products/${product.slug}`} className="block flex-grow">
+          <div className="relative aspect-[3/4] bg-sand overflow-hidden mb-3 home-card group-hover:shadow-[var(--shadow-soft-hover)] transition-shadow duration-300">
+            <img
+              src={mainImage}
+              alt={product.name}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+            {product.isNewArrival && (
+              <span className="absolute top-2 left-2 px-2.5 py-0.5 rounded-full bg-espresso text-white text-[9px] font-bold uppercase tracking-wider">
+                New
+              </span>
+            )}
+            {discountPercent > 0 && product.inStock && (
+              <span className="absolute top-2 right-2 px-2.5 py-0.5 rounded-full bg-tan text-white text-[9px] font-bold">
+                -{discountPercent}%
+              </span>
+            )}
+          </div>
+          <h3 className="font-sans text-sm text-espresso leading-snug line-clamp-2 group-hover:text-tan transition-colors text-center">
+            {product.name}
+          </h3>
+          <div className="flex items-center justify-center gap-2 mt-1.5">
+            <span className="font-sans text-sm font-semibold text-espresso">
+              ₹{product.salePrice.toLocaleString('en-IN')}
+            </span>
+            {product.mrp > product.salePrice && (
+              <span className="text-xs text-muted line-through">
+                ₹{product.mrp.toLocaleString('en-IN')}
+              </span>
+            )}
+          </div>
+        </Link>
+      </article>
+    );
+  }
+
   return (
-    <motion.div
+    <motion.article
       id={`product-card-${product.id}`}
       whileHover={{ y: -4 }}
-      className="bg-cream border border-gold/10 rounded-lg overflow-hidden shadow-md hover:shadow-xl flex flex-col justify-between group transition-all duration-300"
+      className="group kit-card overflow-hidden flex flex-col h-full transition-shadow hover:shadow-[var(--shadow-kit-lg)]"
     >
       <Link to={`/products/${product.slug}`} className="block flex-grow">
-        <div className="relative aspect-[3/4] bg-sand/30 overflow-hidden">
+        <div className="relative aspect-[3/4] bg-cream overflow-hidden">
           <img
             src={mainImage}
             alt={product.name}
@@ -63,53 +87,57 @@ export default function ProductCard({ product }: ProductCardProps) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
 
-          <div className="absolute inset-0 bg-espresso/0 group-hover:bg-espresso/20 transition-colors duration-300 flex items-center justify-center">
-            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-cream/95 text-espresso text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full flex items-center gap-1.5 shadow-lg">
-              <Eye className="h-3.5 w-3.5" /> Quick View
-            </span>
-          </div>
-
-          <div className="absolute top-2 left-2 flex flex-col gap-1.5">
+          <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
             {product.isNewArrival && (
-              <span className="bg-maroon text-cream text-[10px] tracking-widest font-semibold px-2 py-0.5 uppercase shadow-sm">
+              <span className="px-2.5 py-1 rounded-full bg-maroon text-white text-[10px] font-semibold">
                 New
               </span>
             )}
-            {product.isFeatured && (
-              <span className="bg-gold text-espresso text-[10px] tracking-widest font-semibold px-2 py-0.5 uppercase shadow-sm">
-                Best Seller
+            {discountPercent > 0 && product.inStock && (
+              <span className="px-2.5 py-1 rounded-full bg-espresso text-white text-[10px] font-semibold">
+                -{discountPercent}%
               </span>
             )}
             {!product.inStock && (
-              <span className="bg-espresso/80 text-white text-[10px] tracking-widest font-semibold px-2 py-0.5 uppercase flex items-center gap-1">
-                <AlertCircle className="h-3 w-3 shrink-0" /> Sold Out
+              <span className="px-2.5 py-1 rounded-full bg-muted text-white text-[10px] font-semibold">
+                Sold out
               </span>
             )}
           </div>
 
-          {discountPercent > 0 && product.inStock && (
-            <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden">
-              <span className="absolute top-3 -right-6 w-24 bg-green-700 text-white text-[9px] font-bold text-center py-0.5 rotate-45 shadow-sm">
-                {discountPercent}% OFF
-              </span>
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!settings?.whatsappNumber) return;
+              const clean = settings.whatsappNumber.replace(/[^0-9]/g, '');
+              window.open(`https://wa.me/${clean}`, '_blank');
+            }}
+            className="absolute top-3 right-3 h-9 w-9 rounded-full bg-white/95 shadow-md flex items-center justify-center text-muted hover:text-maroon opacity-0 group-hover:opacity-100 transition-opacity"
+            aria-label="Enquire"
+          >
+            <Heart className="h-4 w-4" />
+          </button>
         </div>
 
-        <div className="p-4 flex flex-col gap-1">
-          <span className="text-[10px] text-gold tracking-widest uppercase font-semibold">
-            {collectionName} — {product.fabric}
-          </span>
-          <h3 className="font-serif text-base text-espresso font-semibold leading-snug tracking-wide group-hover:text-maroon line-clamp-2 transition-colors">
+        <div className="p-4 flex flex-col gap-1.5">
+          <div className="flex items-center gap-0.5 text-gold">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Star key={i} className={`h-3 w-3 ${i <= 4 ? 'fill-gold text-gold' : 'text-border'}`} />
+            ))}
+            <span className="text-[10px] text-muted ml-1">(4.0)</span>
+          </div>
+          <p className="text-[11px] font-medium text-muted uppercase tracking-wide">{product.fabric}</p>
+          <h3 className="font-sans text-sm font-semibold text-espresso leading-snug line-clamp-2 group-hover:text-maroon transition-colors">
             {product.name}
           </h3>
-
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="font-sans font-bold text-lg text-maroon">
+          <div className="flex items-baseline gap-2 mt-auto pt-1">
+            <span className="font-sans text-lg font-bold text-espresso">
               ₹{product.salePrice.toLocaleString('en-IN')}
             </span>
             {product.mrp > product.salePrice && (
-              <span className="font-sans text-xs text-gray-400 line-through">
+              <span className="text-xs text-muted line-through">
                 ₹{product.mrp.toLocaleString('en-IN')}
               </span>
             )}
@@ -117,33 +145,18 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
       </Link>
 
-      <div className="px-4 pb-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:max-h-0 md:group-hover:max-h-16 overflow-hidden transition-all duration-300">
-        {product.inStock ? (
+      {product.inStock && (
+        <div className="px-4 pb-4">
           <button
+            type="button"
             onClick={handleAddToCart}
-            className="flex-1 bg-maroon hover:bg-espresso text-white py-2.5 px-1 rounded text-xs font-sans tracking-wide font-medium flex items-center justify-center gap-1 border border-transparent transition-colors cursor-pointer"
-            title="Add product to bag"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-cream border border-border text-sm font-semibold text-espresso hover:bg-maroon hover:text-white hover:border-maroon transition-colors cursor-pointer"
           >
-            <ShoppingCart className="h-3.5 w-3.5 shrink-0" />
-            Add To Cart
+            <ShoppingCart className="h-4 w-4" />
+            Add to Cart
           </button>
-        ) : (
-          <button
-            disabled
-            className="flex-1 bg-gray-200 text-gray-400 py-2.5 px-1 rounded text-xs font-sans tracking-wide font-medium flex items-center justify-center cursor-not-allowed"
-          >
-            No Stock
-          </button>
-        )}
-
-        <button
-          onClick={handleWhatsAppEnquiry}
-          className="bg-transparent text-maroon hover:text-gold p-2.5 rounded border border-maroon/20 hover:border-gold/30 flex items-center justify-center transition-all cursor-pointer"
-          title="Direct enquiry on WhatsApp"
-        >
-          <MessageCircle className="h-4 w-4" />
-        </button>
-      </div>
-    </motion.div>
+        </div>
+      )}
+    </motion.article>
   );
 }

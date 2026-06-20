@@ -7,6 +7,9 @@ import CollectionPage from './pages/CollectionPage';
 import ProductDetail from './pages/ProductDetail';
 import CartPage from './pages/CartPage';
 import About from './pages/About';
+import Services from './pages/Services';
+import Founder from './pages/Founder';
+import Contact from './pages/Contact';
 
 // Administrative Modules
 import AdminLogin from './pages/admin/AdminLogin';
@@ -30,6 +33,9 @@ export default function App() {
         <Route path="/products/:slug" element={<ProductDetail />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/about" element={<About />} />
+        <Route path="/services" element={<Services />} />
+        <Route path="/founder" element={<Founder />} />
+        <Route path="/contact" element={<Contact />} />
 
         {/* SECURE ADMIN CONTROL ROUTES */}
         <Route path="/admin/login" element={<AdminLogin />} />

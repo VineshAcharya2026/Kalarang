@@ -5,7 +5,7 @@ import { ADMIN_EMAIL, isAdminUser, loginAdmin, getAuthErrorMessage } from '../..
 import { useAuthStore } from '../../store/authStore';
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(ADMIN_EMAIL);
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -120,7 +120,7 @@ export default function AdminLogin() {
           </button>
 
           <span className="text-[10px] text-center text-gray-500 italic mt-3 block">
-            Authorized administrators only.
+            Sign in with {ADMIN_EMAIL} or vineshjm@gmail.com
           </span>
         </form>
       </div>

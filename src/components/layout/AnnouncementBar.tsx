@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSettings } from '../../hooks/useSettings';
+import { Link } from 'react-router-dom';
 
 export default function AnnouncementBar() {
   const { settings, loading } = useSettings();
@@ -9,11 +10,14 @@ export default function AnnouncementBar() {
   }
 
   return (
-    <div 
+    <div
       id="announcement-bar"
-      className="bg-[#1C1008] text-[#E8D5B0] text-center py-2 px-4 text-xs font-sans tracking-wider font-medium border-b border-[#B8860B]/20"
+      className="bg-maroon text-cream text-center py-2 px-4 text-xs font-medium"
     >
-      {settings.announcementBar.text}
+      {settings.announcementBar.text}{' '}
+      <Link to="/collections/all" className="underline underline-offset-2 text-gold hover:text-white ml-1">
+        Shop now
+      </Link>
     </div>
   );
 }

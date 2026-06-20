@@ -116,10 +116,13 @@ export async function handler(event) {
     };
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminEmails = [
+    process.env.ADMIN_EMAIL || 'admin@kalarang.com',
+    'vineshjm@gmail.com',
+  ];
   const adminPassword = process.env.ADMIN_PASSWORD;
 
-  if (!adminEmail || !adminPassword) {
+  if (!adminPassword) {
     return {
       statusCode: 503,
       headers: { 'Content-Type': 'application/json', ...CORS },
@@ -130,7 +133,8 @@ export async function handler(event) {
   try {
     const { email, password } = JSON.parse(event.body || '{}');
 
-    if (email?.trim() !== adminEmail || password !== adminPassword) {
+    const normalizedEmail = email?.trim();
+    if (!adminEmails.includes(normalizedEmail) || password !== adminPassword) {
       return {
         statusCode: 401,
         headers: { 'Content-Type': 'application/json', ...CORS },
@@ -140,7 +144,7 @@ export async function handler(event) {
 
     const serviceAccount = getServiceAccount();
     const accessToken = await getGoogleAccessToken(serviceAccount);
-    const user = await getUserByEmail(adminEmail, serviceAccount.project_id, accessToken);
+    const user = await getUserByEmail(normalizedEmail, serviceAccount.project_id, accessToken);
     const token = createCustomToken(user.localId, serviceAccount);
 
     return {

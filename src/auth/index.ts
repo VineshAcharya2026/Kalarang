@@ -1,4 +1,4 @@
-export { ADMIN_EMAIL } from './constants';
+export { ADMIN_EMAIL, ADMIN_EMAILS, isAdminEmail } from './constants';
 export {
   initAuthPersistence,
   subscribeToAuth,

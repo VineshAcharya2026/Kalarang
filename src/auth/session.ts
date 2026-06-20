@@ -9,7 +9,7 @@ import {
 } from 'firebase/auth';
 import type { FirebaseError } from 'firebase/app';
 import { auth } from '../firebase/config';
-import { ADMIN_EMAIL } from './constants';
+import { ADMIN_EMAIL, isAdminEmail } from './constants';
 
 let persistenceReady: Promise<void> | null = null;
 
@@ -25,7 +25,7 @@ export function subscribeToAuth(onChange: (user: User | null) => void): () => vo
 }
 
 export function isAdminUser(user: User | null): boolean {
-  return Boolean(user && user.email === ADMIN_EMAIL && user.emailVerified);
+  return isAdminEmail(user?.email ?? null);
 }
 
 export function waitForAuthReady(): Promise<User | null> {
@@ -38,20 +38,18 @@ export function waitForAuthReady(): Promise<User | null> {
 }
 
 async function finalizeSession(user: User): Promise<User> {
-  if (user.email !== ADMIN_EMAIL) {
+  if (!isAdminEmail(user.email)) {
     await signOut(auth);
-    throw new Error(`Only ${ADMIN_EMAIL} can access the admin panel.`);
+    throw new Error(`Only authorized admin emails can access the admin panel.`);
   }
 
   await user.reload();
-
-  if (!user.emailVerified) {
-    await signOut(auth);
-    throw new Error('Admin account is not verified. Contact the site administrator.');
-  }
-
   await user.getIdToken(true);
   return user;
+}
+
+function isNetlifyAuthUnavailable(status: number): boolean {
+  return status === 503 || status === 404 || status === 502;
 }
 
 async function loginViaNetlifyFunction(email: string, password: string): Promise<string> {
@@ -68,7 +66,7 @@ async function loginViaNetlifyFunction(email: string, password: string): Promise
 
   const data = (await res.json().catch(() => ({}))) as { token?: string; error?: string };
 
-  if (res.status === 503 || res.status === 404 || res.status === 502) {
+  if (isNetlifyAuthUnavailable(res.status)) {
     throw new Error('NETLIFY_AUTH_UNAVAILABLE');
   }
 
@@ -84,7 +82,7 @@ async function loginViaFirebaseClient(email: string, password: string): Promise<
   return finalizeSession(credential.user);
 }
 
-/** Netlify-aware admin login: server function in production, client fallback in dev. */
+/** Netlify-aware admin login: server function when configured, Firebase Auth fallback otherwise. */
 export async function loginAdmin(email: string, password: string): Promise<User> {
   await initAuthPersistence();
 
@@ -95,7 +93,9 @@ export async function loginAdmin(email: string, password: string): Promise<User>
   } catch (err) {
     const message = err instanceof Error ? err.message : '';
     const useClientFallback =
-      import.meta.env.DEV || message === 'NETLIFY_AUTH_UNAVAILABLE';
+      import.meta.env.DEV ||
+      message === 'NETLIFY_AUTH_UNAVAILABLE' ||
+      message.includes('not configured');
 
     if (useClientFallback) {
       return loginViaFirebaseClient(email, password);
@@ -119,10 +119,7 @@ export async function ensureAdminAuth(): Promise<User> {
   }
 
   if (!isAdminUser(user)) {
-    if (user.email !== ADMIN_EMAIL) {
-      throw new Error(`Only ${ADMIN_EMAIL} can perform admin uploads and edits.`);
-    }
-    throw new Error('Your admin email is not verified. Contact the site administrator.');
+    throw new Error(`Only ${ADMIN_EMAIL} can perform admin uploads and edits.`);
   }
 
   await user.getIdToken(true);
@@ -133,17 +130,17 @@ export function getAuthErrorMessage(error: unknown, fallback: string): string {
   const fbError = error as FirebaseError;
   switch (fbError.code) {
     case 'auth/unauthorized-domain':
-      return 'This site domain is not authorized for sign-in. Add it in your Firebase Auth authorized domains.';
+      return 'This site domain is not authorized for sign-in. Add it in Firebase Auth → Settings → Authorized domains.';
     case 'auth/wrong-password':
     case 'auth/user-not-found':
     case 'auth/invalid-credential':
-      return 'Invalid email or password.';
+      return 'Invalid email or password. Use your Firebase Auth credentials for this admin email.';
     case 'auth/too-many-requests':
       return 'Too many failed attempts. Please wait a few minutes and try again.';
     case 'auth/network-request-failed':
       return 'Network error. Check your connection and try again.';
     case 'auth/configuration-not-found':
-      return 'Authentication is not configured for this project.';
+      return 'Email/password sign-in is not enabled. Enable it in Firebase Console → Authentication.';
     default:
       return error instanceof Error ? error.message || fallback : fallback;
   }

@@ -1,21 +1,20 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { about } from '../../content/siteContent';
 
 export default function AboutTeaser() {
   return (
     <section id="about-teaser" className="text-center max-w-3xl mx-auto">
       <span className="font-sans text-xs tracking-[0.3em] text-gold uppercase font-bold">
-        Heritage & Devotion
+        {about.eyebrow}
       </span>
       <h2 className="font-serif text-2xl sm:text-3xl font-bold text-espresso uppercase mt-2">
-        Where Tradition Weaves Its Story
+        {about.title}
       </h2>
       <div className="h-0.5 w-16 bg-gold mx-auto mt-2" />
       <p className="font-serif text-sm sm:text-base text-gray-600 mt-4 leading-relaxed">
-        At KALARANG — Silks & Studio, every saree is more than six yards of fabric; it is a
-        canvas where centuries of Indian traditional loom art, devotion, and weaver family stories
-        come to life.
+        {about.teaser}
       </p>
       <Link
         to="/about"
