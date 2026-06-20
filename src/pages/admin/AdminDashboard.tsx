@@ -3,7 +3,7 @@ import { useProducts } from '../../hooks/useProducts';
 import { useCollections } from '../../hooks/useCollections';
 import { useOrders } from '../../hooks/useOrders';
 import { Order } from '../../types';
-import { seedCatalog } from '../../utils/seedCatalog';
+import { seedCatalog, SAMPLE_PRODUCT_COUNT } from '../../utils/seedCatalog';
 import { 
   ShoppingBag, 
   Sparkles, 
@@ -50,24 +50,34 @@ export default function AdminDashboard() {
     .filter((o) => o.status !== 'pending') // Only completed/confirmed orders contribute to definitive sales indicators
     .reduce((sum, o) => sum + o.total, 0);
 
-  const catalogEmpty = totalCollectionsCount === 0 && totalProductsCount === 0;
+  const catalogNeedsProducts = totalProductsCount < SAMPLE_PRODUCT_COUNT;
 
   const handleLoadSampleCatalog = async () => {
     setSeeding(true);
     setSeedMessage(null);
     try {
       const result = await seedCatalog({
-        collectionsCount: totalCollectionsCount,
-        productsCount: totalProductsCount,
+        collections,
+        products,
         addCollection,
         addProduct,
       });
       if (result.skipped) {
-        setSeedMessage({ type: 'error', text: 'Catalog already has data. Sample catalog was not added.' });
+        setSeedMessage({
+          type: 'error',
+          text: `All ${SAMPLE_PRODUCT_COUNT} sample sarees are already in the catalog.`,
+        });
       } else {
+        const parts: string[] = [];
+        if (result.collectionsAdded > 0) {
+          parts.push(`${result.collectionsAdded} categor${result.collectionsAdded === 1 ? 'y' : 'ies'}`);
+        }
+        if (result.productsAdded > 0) {
+          parts.push(`${result.productsAdded} saree${result.productsAdded === 1 ? '' : 's'}`);
+        }
         setSeedMessage({
           type: 'success',
-          text: `Sample catalog loaded: ${result.collectionsAdded} categories and ${result.productsAdded} sarees.`,
+          text: `Added ${parts.join(' and ')} to the catalog.`,
         });
       }
     } catch (err) {
@@ -120,7 +130,7 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      {catalogEmpty && (
+      {catalogNeedsProducts && (
         <div className="bg-[#FDF8F2] border border-[#B8860B]/20 rounded-md p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="p-2.5 bg-[#B8860B]/10 rounded-full shrink-0">
@@ -128,10 +138,12 @@ export default function AdminDashboard() {
             </div>
             <div>
               <h2 className="font-serif text-lg font-bold text-[#1C1008] uppercase">
-                Empty Catalog
+                {totalProductsCount === 0 ? 'No Sarees Yet' : 'Add Sample Sarees'}
               </h2>
               <p className="text-xs text-gray-500 mt-1 max-w-md">
-                Load 5 sample categories and 5 saree products to populate the homepage instantly.
+                {totalProductsCount === 0
+                  ? `Add ${SAMPLE_PRODUCT_COUNT} sample sarees with categories, images, and pricing to populate the homepage.`
+                  : `${totalProductsCount} of ${SAMPLE_PRODUCT_COUNT} sample sarees loaded — add the remaining ones.`}
               </p>
               {seedMessage && (
                 <p
@@ -156,7 +168,7 @@ export default function AdminDashboard() {
                 Loading...
               </>
             ) : (
-              'Load Sample Catalog'
+              `Add ${SAMPLE_PRODUCT_COUNT} Sample Sarees`
             )}
           </button>
         </div>
