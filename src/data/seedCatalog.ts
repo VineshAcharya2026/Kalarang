@@ -68,6 +68,24 @@ export const SEED_COLLECTIONS: SeedCollection[] = [
     isActive: true,
     description: 'Contemporary designer sarees crafted for festive evenings and celebrations.',
   },
+  {
+    name: 'Dresses',
+    slug: 'dresses',
+    coverImage:
+      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=600&q=80',
+    order: 6,
+    isActive: true,
+    description: 'Elegant ethnic and fusion dresses for festive occasions and everyday grace.',
+  },
+  {
+    name: 'Blouses',
+    slug: 'blouses',
+    coverImage:
+      'https://images.unsplash.com/photo-1610030469854-2c069b3f3b90?auto=format&fit=crop&w=600&q=80',
+    order: 7,
+    isActive: true,
+    description: 'Handcrafted blouses with intricate embroidery, zari work, and custom fits.',
+  },
 ];
 
 export const SEED_PRODUCTS: SeedProduct[] = [

@@ -51,6 +51,10 @@ export interface Order {
   pincode: string;
   notes?: string;
   items: OrderItem[];
+  subtotal: number;
+  discountAmount?: number;
+  discountPercent?: number;
+  shippingCharges: number;
   total: number;
   status: 'pending' | 'confirmed' | 'shipped' | 'delivered';
   createdAt: any;         // Firestore Timestamp
@@ -83,4 +87,8 @@ export interface Settings {
     text: string;
   };
   freeShippingThreshold: number;
+  firstOrderDiscount?: {
+    enabled: boolean;
+    percent: number;
+  };
 }

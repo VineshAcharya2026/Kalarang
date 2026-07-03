@@ -162,7 +162,15 @@ export default function AdminOrders() {
                     </div>
 
                     <div className="border-t border-[#B8860B]/10 pt-4 mt-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                      <div className="flex flex-col">
+                      <div className="flex flex-col gap-1">
+                        {(order.discountAmount ?? 0) > 0 && (
+                          <div className="text-xs text-gray-500">
+                            <span>Subtotal: ₹{(order.subtotal ?? order.total).toLocaleString('en-IN')}</span>
+                            <span className="text-green-700 block">
+                              First order discount ({order.discountPercent}%): -₹{order.discountAmount!.toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                        )}
                         <span className="text-[10px] text-gray-500 uppercase font-semibold leading-none">Grand Total value:</span>
                         <span className="text-lg font-bold font-sans text-[#7A1C2E]">
                           ₹{order.total.toLocaleString('en-IN')}

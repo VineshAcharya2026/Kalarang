@@ -5,12 +5,13 @@ import { Settings } from '../types';
 
 const DEFAULT_SETTINGS: Settings = {
   storeName: 'KALARANG — Silks & Studio',
-  whatsappNumber: '919886943080',
+  whatsappNumber: '919108955445',
   announcementBar: {
     enabled: true,
-    text: '✨ Free Shipping above ₹5000 | ₹500 off your first KALARANG order ✨'
+    text: '✨ Free Shipping above ₹5000 | 10% off your first KALARANG order ✨'
   },
-  freeShippingThreshold: 5000
+  freeShippingThreshold: 5000,
+  firstOrderDiscount: { enabled: true, percent: 10 },
 };
 
 export function useSettings() {

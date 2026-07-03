@@ -7,6 +7,8 @@ import {
   doc, 
   query, 
   orderBy,
+  where,
+  getDocs,
   serverTimestamp
 } from 'firebase/firestore';
 import { db, OperationType, handleFirestoreError } from '../firebase/config';
@@ -50,6 +52,23 @@ export function useOrders() {
     }
   };
 
+  const getOrdersByPhone = async (phone: string): Promise<Order[]> => {
+    const normalizedPhone = phone.replace(/[^0-9]/g, '');
+    if (!normalizedPhone) return [];
+
+    try {
+      const q = query(collection(db, 'orders'), where('phone', '==', normalizedPhone));
+      const snapshot = await getDocs(q);
+      return snapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      })) as Order[];
+    } catch (err) {
+      handleFirestoreError(err, OperationType.GET, 'orders');
+      return [];
+    }
+  };
+
   const updateOrderStatus = async (id: string, status: Order['status']) => {
     try {
       const docRef = doc(db, 'orders', id);
@@ -63,6 +82,7 @@ export function useOrders() {
 
   return {
     addOrder,
+    getOrdersByPhone,
     updateOrderStatus,
     subscribeToOrders,
   };

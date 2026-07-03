@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mail, MapPin, Phone } from 'lucide-react';
+import { Mail, Phone } from 'lucide-react';
 import MarketingPageShell from '../components/marketing/MarketingPageShell';
 import PageHero from '../components/marketing/PageHero';
 import ConsultationForm from '../components/forms/ConsultationForm';
@@ -33,13 +33,6 @@ export default function ContactPage() {
                 <div>
                   <p className="font-bold text-espresso uppercase text-xs tracking-wider">Email</p>
                   <p>{contact.email}</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-gold shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold text-espresso uppercase text-xs tracking-wider">Studio</p>
-                  <p>{contact.address}</p>
                 </div>
               </li>
             </ul>

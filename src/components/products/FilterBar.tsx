@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { SlidersHorizontal, ChevronDown, RefreshCw, X } from 'lucide-react';
+import { SlidersHorizontal, RefreshCw, X } from 'lucide-react';
+import { MIN_PRICE_FILTER, MAX_PRICE_FILTER, PRICE_FILTER_STEP } from '../../constants/filters';
 
 interface FilterBarProps {
   selectedOccasions: string[];
@@ -79,16 +80,16 @@ export default function FilterBar({
         </div>
         <input
           type="range"
-          min="500"
-          max="35000"
-          step="500"
+          min={MIN_PRICE_FILTER}
+          max={MAX_PRICE_FILTER}
+          step={PRICE_FILTER_STEP}
           value={maxPrice}
           onChange={(e) => setMaxPrice(parseInt(e.target.value))}
           className="w-full accent-[#7A1C2E] h-1.5 bg-gray-200 rounded-lg cursor-pointer"
         />
         <div className="flex justify-between text-[10px] text-gray-500 mt-1">
-          <span>₹500</span>
-          <span>₹35,000</span>
+          <span>₹{MIN_PRICE_FILTER.toLocaleString('en-IN')}</span>
+          <span>₹{MAX_PRICE_FILTER.toLocaleString('en-IN')}</span>
         </div>
       </div>
 
@@ -145,7 +146,7 @@ export default function FilterBar({
       </div>
 
       {/* Clear Trigger */}
-      {(selectedOccasions.length > 0 || selectedColors.length > 0 || maxPrice < 35000) && (
+      {(selectedOccasions.length > 0 || selectedColors.length > 0 || maxPrice < MAX_PRICE_FILTER) && (
         <button
           onClick={onClearFilters}
           className="w-full mt-2 border border-[#7A1C2E] text-[#7A1C2E] hover:bg-[#7A1C2E] hover:text-white transition-colors py-2 px-3 rounded text-xs px-3 font-semibold flex items-center justify-center gap-1 cursor-pointer"

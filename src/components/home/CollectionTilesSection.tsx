@@ -62,19 +62,19 @@ export default function CollectionTilesSection({
   collections,
   loading,
 }: CollectionTilesSectionProps) {
-  const tiles = collections.slice(0, 5);
+  const tiles = collections;
 
   return (
     <section id="shop-collections" aria-label="Explore collections">
       <HomeSection>
       <CenteredSectionHeader
         title="Explore our collections"
-        subtitle="Shop curated sarees by fabric, occasion, and style."
+        subtitle="Shop curated sarees, dresses, and blouses by fabric, occasion, and style."
       />
 
       {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5 sm:gap-6">
-          {[1, 2, 3, 4, 5].map((i) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-5 sm:gap-6">
+          {[1, 2, 3, 4, 5, 6, 7].map((i) => (
             <div
               key={i}
               className="aspect-[3/4] bg-sand/80 rounded-[var(--radius-home)] animate-pulse shadow-[var(--shadow-soft)]"
@@ -104,7 +104,7 @@ export default function CollectionTilesSection({
         </motion.div>
       ) : (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-5 sm:gap-6">
             {tiles.map((col, index) => (
               <CollectionTile key={col.id} col={col} index={index} />
             ))}

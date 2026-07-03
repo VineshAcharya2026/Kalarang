@@ -242,7 +242,6 @@ export const contact = {
   description:
     'Share your vision with us and we will connect with you on WhatsApp to discuss your requirements.',
   email: 'studio@kalarang.com',
-  address: 'KALARANG Studio, Silk Bazaar, Bangalore, India',
 };
 
 export const consultationServices = [

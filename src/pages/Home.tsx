@@ -10,6 +10,7 @@ import Footer from '../components/layout/Footer';
 import WhatsAppFAB from '../components/layout/WhatsAppFAB';
 import HeroSection from '../components/home/HeroSection';
 import CollectionTilesSection from '../components/home/CollectionTilesSection';
+import ColorSection from '../components/home/ColorSection';
 import EditorialBandSection from '../components/home/EditorialBandSection';
 import FeaturedProductsSection from '../components/home/FeaturedProductsSection';
 import NewArrivalsSection from '../components/home/NewArrivalsSection';
@@ -103,6 +104,8 @@ export default function Home() {
       <main className="flex flex-col w-full">
         {/* 2. Explore collections */}
         <CollectionTilesSection collections={activeCollections} loading={collectionsLoading} />
+
+        <ColorSection />
 
         {/* 3. Our Story */}
         <EditorialBandSection />

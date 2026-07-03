@@ -10,8 +10,10 @@ export default function AdminSettings() {
   const [logoText, setLogoText] = useState('KALARANG');
   const [announcementText, setAnnouncementText] = useState('✨ Handcrafted pure Banarasi silk sarees on display at our Studio Lobby. Buy now! ✨');
   const [showAnnouncement, setShowAnnouncement] = useState(true);
-  const [whatsappNumber, setWhatsappNumber] = useState('+91 98869 43080');
+  const [whatsappNumber, setWhatsappNumber] = useState('+91 91089 55445');
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(5000);
+  const [firstOrderDiscountEnabled, setFirstOrderDiscountEnabled] = useState(true);
+  const [firstOrderDiscountPercent, setFirstOrderDiscountPercent] = useState(10);
 
   // Status indicators
   const [submitting, setSubmitting] = useState(false);
@@ -23,8 +25,10 @@ export default function AdminSettings() {
       setLogoText(settings.storeName || 'KALARANG');
       setAnnouncementText(settings.announcementBar?.text || '');
       setShowAnnouncement(settings.announcementBar?.enabled ?? true);
-      setWhatsappNumber(settings.whatsappNumber || '+91 98869 43080');
+      setWhatsappNumber(settings.whatsappNumber || '+91 91089 55445');
       setFreeShippingThreshold(settings.freeShippingThreshold || 5000);
+      setFirstOrderDiscountEnabled(settings.firstOrderDiscount?.enabled ?? true);
+      setFirstOrderDiscountPercent(settings.firstOrderDiscount?.percent ?? 10);
     }
   }, [settings]);
 
@@ -42,6 +46,10 @@ export default function AdminSettings() {
           text: announcementText,
         },
         freeShippingThreshold,
+        firstOrderDiscount: {
+          enabled: firstOrderDiscountEnabled,
+          percent: firstOrderDiscountPercent,
+        },
       };
 
       await saveSettings(payload);
@@ -156,6 +164,35 @@ export default function AdminSettings() {
               <span className="text-[10px] text-gray-500 mt-1">
                 Purchases above this value bypass shipping calculations during customer checkout.
               </span>
+            </div>
+
+            {/* First order discount */}
+            <div className="flex flex-col gap-3 bg-[#E8D5B0]/15 p-4 rounded border border-[#B8860B]/10">
+              <label className="flex items-center gap-2 cursor-pointer select-none font-medium text-gray-700 text-xs leading-none">
+                <input
+                  type="checkbox"
+                  checked={firstOrderDiscountEnabled}
+                  onChange={(e) => setFirstOrderDiscountEnabled(e.target.checked)}
+                  className="rounded text-[#7A1C2E] focus:ring-[#7A1C2E] h-4 w-4"
+                />
+                Enable first-order discount at checkout
+              </label>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-[#1C1008] uppercase tracking-wider">
+                  First Order Discount (%)
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  max="100"
+                  placeholder="e.g. 10"
+                  value={firstOrderDiscountPercent || ''}
+                  onChange={(e) => setFirstOrderDiscountPercent(parseFloat(e.target.value) || 0)}
+                  disabled={!firstOrderDiscountEnabled}
+                  className="bg-[#FDF8F2] border border-[#B8860B]/25 rounded px-3.5 py-2.5 text-sm focus:border-[#7A1C2E] focus:outline-none font-mono text-[#1C1008] max-w-xs disabled:opacity-50"
+                />
+              </div>
             </div>
 
             {/* Success alert message */}

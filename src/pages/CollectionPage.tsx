@@ -8,6 +8,7 @@ import AnnouncementBar from '../components/layout/AnnouncementBar';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import WhatsAppFAB from '../components/layout/WhatsAppFAB';
+import { MAX_PRICE_FILTER } from '../constants/filters';
 
 export default function CollectionPage() {
   const { slug } = useParams();
@@ -18,16 +19,21 @@ export default function CollectionPage() {
   // Filters State
   const [selectedOccasions, setSelectedOccasions] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  const [maxPrice, setMaxPrice] = useState<number>(35000);
+  const [maxPrice, setMaxPrice] = useState<number>(MAX_PRICE_FILTER);
   const [sortBy, setSortBy] = useState<string>('newest');
 
   // Trigger filters sync if query search params exist (e.g., redirect from Occasions grid)
   useEffect(() => {
     const qOccasion = searchParams.get('occasion');
+    const qColor = searchParams.get('color');
     if (qOccasion) {
       setSelectedOccasions([qOccasion]);
-      // Consume query parameter
       searchParams.delete('occasion');
+      setSearchParams(searchParams);
+    }
+    if (qColor) {
+      setSelectedColors([qColor]);
+      searchParams.delete('color');
       setSearchParams(searchParams);
     }
   }, [searchParams, setSearchParams]);
@@ -36,7 +42,7 @@ export default function CollectionPage() {
   useEffect(() => {
     setSelectedOccasions([]);
     setSelectedColors([]);
-    setMaxPrice(35000);
+    setMaxPrice(MAX_PRICE_FILTER);
   }, [slug]);
 
   if (productsLoading || collectionsLoading) {
@@ -131,7 +137,7 @@ export default function CollectionPage() {
   const handleClearFilters = () => {
     setSelectedOccasions([]);
     setSelectedColors([]);
-    setMaxPrice(35000);
+    setMaxPrice(MAX_PRICE_FILTER);
   };
 
   const headerTitle = isAll ? 'Our Full Saree Catalogue' : currentCollection?.name || 'Exclusive Sarees';

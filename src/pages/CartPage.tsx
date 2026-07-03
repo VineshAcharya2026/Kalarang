@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Trash2, ShoppingBag, Plus, Minus, FileText, Send, ArrowLeft, CheckCircle2, PhoneCall } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -12,7 +12,7 @@ import Footer from '../components/layout/Footer';
 export default function CartPage() {
   const { items, total, updateQty, removeItem, clearCart } = useCartStore();
   const { settings, loading: settingsLoading } = useSettings();
-  const { addOrder } = useOrders();
+  const { addOrder, getOrdersByPhone } = useOrders();
 
   // Checkout Form State
   const [customerName, setCustomerName] = useState('');
@@ -24,6 +24,24 @@ export default function CartPage() {
   // UI state
   const [submitting, setSubmitting] = useState(false);
   const [successOrderId, setSuccessOrderId] = useState<string | null>(null);
+  const [isFirstOrder, setIsFirstOrder] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const normalized = phone.replace(/[^0-9]/g, '');
+    if (normalized.length < 10) {
+      setIsFirstOrder(null);
+      return;
+    }
+
+    let cancelled = false;
+    getOrdersByPhone(normalized).then((priorOrders) => {
+      if (!cancelled) setIsFirstOrder(priorOrders.length === 0);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [phone, getOrdersByPhone]);
 
   if (settingsLoading) {
     return (
@@ -41,10 +59,15 @@ export default function CartPage() {
     );
   }
 
-  // Calculate Shipping charges
+  // Calculate totals
   const freeThreshold = settings?.freeShippingThreshold || 5000;
-  const shippingCharges = total >= freeThreshold ? 0 : 200;
-  const grandTotal = total + shippingCharges;
+  const discountEnabled = settings?.firstOrderDiscount?.enabled ?? true;
+  const discountPercent = settings?.firstOrderDiscount?.percent ?? 10;
+  const subtotal = total;
+  const discountAmount =
+    isFirstOrder && discountEnabled ? Math.round(subtotal * discountPercent / 100) : 0;
+  const shippingCharges = subtotal >= freeThreshold ? 0 : 200;
+  const grandTotal = subtotal - discountAmount + shippingCharges;
 
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,10 +86,20 @@ export default function CartPage() {
     setSubmitting(true);
 
     try {
-      // 1. Compile order dataset matched strictly to schema
+      const normalizedPhone = phone.replace(/[^0-9]/g, '');
+      const priorOrders = await getOrdersByPhone(normalizedPhone);
+      const eligibleForDiscount =
+        priorOrders.length === 0 && (settings?.firstOrderDiscount?.enabled ?? true);
+      const appliedDiscountPercent = settings?.firstOrderDiscount?.percent ?? 10;
+      const appliedDiscountAmount = eligibleForDiscount
+        ? Math.round(total * appliedDiscountPercent / 100)
+        : 0;
+      const appliedShipping = total >= freeThreshold ? 0 : 200;
+      const appliedGrandTotal = total - appliedDiscountAmount + appliedShipping;
+
       const orderPayload = {
         customerName,
-        phone,
+        phone: normalizedPhone,
         address,
         pincode,
         notes: notes || '',
@@ -78,7 +111,11 @@ export default function CartPage() {
           qty: item.qty,
           price: item.price,
         })),
-        total: grandTotal,
+        subtotal: total,
+        discountAmount: appliedDiscountAmount,
+        discountPercent: appliedDiscountAmount > 0 ? appliedDiscountPercent : undefined,
+        shippingCharges: appliedShipping,
+        total: appliedGrandTotal,
       };
 
       // 2. Add into Firestore doc
@@ -93,7 +130,12 @@ export default function CartPage() {
           return `${idx + 1}. ${itm.productName} (${itm.color}) x${itm.qty} - ₹${(itm.price * itm.qty).toLocaleString('en-IN')}`;
         }).join('\n');
 
-        const messageText = `Hi KALARANG! 🌸\nI have placed a Saree Enquiry Order from your online boutique!\n\n🛍️ *ORDER ID:* ${orderId}\n👤 *Customer Name:* ${customerName}\n📞 *Phone:* ${phone}\n📍 *Delivery Address:* ${address}, Pincode: ${pincode}\n📝 *Notes:* ${notes || 'None'}\n\n*SAREES SELECTED:*\n${itemsSummary}\n\n*SUMMARY:*\nSubtotal: ₹${total.toLocaleString('en-IN')}\nShipping: ${shippingCharges === 0 ? 'FREE' : `₹${shippingCharges}`}\n*Estimated Grand Total: ₹${grandTotal.toLocaleString('en-IN')}*\n\nPlease confirm availability and details to trigger payment/shipment! 🙏`;
+        const discountLine =
+          appliedDiscountAmount > 0
+            ? `First Order Discount (${appliedDiscountPercent}%): -₹${appliedDiscountAmount.toLocaleString('en-IN')}\n`
+            : '';
+
+        const messageText = `Hi KALARANG! 🌸\nI have placed a Saree Enquiry Order from your online boutique!\n\n🛍️ *ORDER ID:* ${orderId}\n👤 *Customer Name:* ${customerName}\n📞 *Phone:* ${phone}\n📍 *Delivery Address:* ${address}, Pincode: ${pincode}\n📝 *Notes:* ${notes || 'None'}\n\n*SAREES SELECTED:*\n${itemsSummary}\n\n*SUMMARY:*\nSubtotal: ₹${total.toLocaleString('en-IN')}\n${discountLine}Shipping: ${appliedShipping === 0 ? 'FREE' : `₹${appliedShipping}`}\n*Estimated Grand Total: ₹${appliedGrandTotal.toLocaleString('en-IN')}*\n\nPlease confirm availability and details to trigger payment/shipment! 🙏`;
 
         // 4. Redirect on WA in popup tab
         window.open(`https://wa.me/${cleanStoreNumber}?text=${encodeURIComponent(messageText)}`, '_blank');
@@ -386,8 +428,19 @@ export default function CartPage() {
                   <div className="text-sm font-sans flex flex-col gap-2.5 text-gray-700 bg-[#E8D5B0]/20 p-4 border border-[#B8860B]/10 rounded mb-1">
                     <div className="flex justify-between">
                       <span>Items Subtotal:</span>
-                      <span>₹{total.toLocaleString('en-IN')}</span>
+                      <span>₹{subtotal.toLocaleString('en-IN')}</span>
                     </div>
+                    {discountAmount > 0 && (
+                      <div className="flex justify-between text-green-700">
+                        <span>First Order Discount ({discountPercent}%):</span>
+                        <span>-₹{discountAmount.toLocaleString('en-IN')}</span>
+                      </div>
+                    )}
+                    {isFirstOrder === false && discountEnabled && (
+                      <span className="text-[10px] text-gray-500 -mt-1">
+                        First-order discount applies to new customers only.
+                      </span>
+                    )}
                     <div className="flex justify-between">
                       <span>Loom Shipping Fee:</span>
                       <span>
@@ -400,7 +453,7 @@ export default function CartPage() {
                     </div>
                     {shippingCharges > 0 && (
                       <span className="text-[10px] text-[#B8860B] font-bold text-right -mt-1.5">
-                        Add ₹{(freeThreshold - total).toLocaleString('en-IN')} more for free custom shipping!
+                        Add ₹{(freeThreshold - subtotal).toLocaleString('en-IN')} more for free custom shipping!
                       </span>
                     )}
                     <hr className="border-dashed border-gray-300" />
