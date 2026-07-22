@@ -1,15 +1,20 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram } from 'lucide-react';
+import { Instagram, MapPin, Mail, Phone } from 'lucide-react';
 import { useSettings } from '../../hooks/useSettings';
 import { useCollections } from '../../hooks/useCollections';
-import { brand } from '../../content/siteContent';
+import { brand, contact } from '../../content/siteContent';
+import { formatWhatsAppDisplay, normalizeWhatsAppNumber } from '../../constants/contact';
 
 export default function Footer() {
   const { settings } = useSettings();
   const { collections } = useCollections();
   const activeCollections = collections.filter((c) => c.isActive).slice(0, 6);
   const year = new Date().getFullYear();
+  const email = settings?.email || contact.email;
+  const address = settings?.studioAddress || contact.address;
+  const whatsappNumber = normalizeWhatsAppNumber(settings?.whatsappNumber);
+  const whatsappDisplay = formatWhatsAppDisplay(settings?.whatsappNumber);
 
   return (
     <footer id="footer-section" className="bg-espresso text-cream/70 mt-auto">
@@ -64,12 +69,34 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Follow us */}
+          {/* Contact & follow */}
           <div className="text-center sm:text-left">
-            <h4 className="text-sm font-semibold text-white mb-5 tracking-wide">Follow us</h4>
-            <p className="text-sm leading-relaxed mb-5">
-              Follow {brand.name} on social media for new arrivals, studio updates, and styling inspiration.
-            </p>
+            <h4 className="text-sm font-semibold text-white mb-5 tracking-wide">Contact</h4>
+            <ul className="space-y-3 text-sm mb-5">
+              <li className="flex items-start justify-center sm:justify-start gap-2">
+                <Phone className="h-4 w-4 shrink-0 mt-0.5 text-gold" />
+                <a
+                  href={`https://wa.me/${whatsappNumber}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  {whatsappDisplay}
+                </a>
+              </li>
+              <li className="flex items-start justify-center sm:justify-start gap-2">
+                <Mail className="h-4 w-4 shrink-0 mt-0.5 text-gold" />
+                <a href={`mailto:${email}`} className="hover:text-white transition-colors">
+                  {email}
+                </a>
+              </li>
+              {address ? (
+                <li className="flex items-start justify-center sm:justify-start gap-2">
+                  <MapPin className="h-4 w-4 shrink-0 mt-0.5 text-gold" />
+                  <span className="whitespace-pre-line text-left">{address}</span>
+                </li>
+              ) : null}
+            </ul>
             <div className="flex items-center justify-center sm:justify-start gap-4">
               <a
                 href="https://instagram.com"
@@ -80,16 +107,14 @@ export default function Footer() {
               >
                 <Instagram className="h-4 w-4" />
               </a>
-              {settings?.whatsappNumber && (
-                <a
-                  href={`https://wa.me/${settings.whatsappNumber.replace(/[^0-9]/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs font-semibold uppercase tracking-wider border border-white/20 px-4 py-2 rounded-full hover:bg-white/10 transition-colors"
-                >
-                  WhatsApp
-                </a>
-              )}
+              <a
+                href={`https://wa.me/${whatsappNumber}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-semibold uppercase tracking-wider border border-white/20 px-4 py-2 rounded-full hover:bg-white/10 transition-colors"
+              >
+                WhatsApp
+              </a>
             </div>
           </div>
         </div>

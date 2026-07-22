@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { Product } from '../../types';
 import { useCartStore } from '../../store/cartStore';
 import { whatsAppUrl } from '../../constants/contact';
+import { useSettings } from '../../hooks/useSettings';
 
 interface ProductCardProps {
   product: Product;
@@ -13,6 +14,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, variant = 'default' }: ProductCardProps) {
   const { addItem } = useCartStore();
+  const { settings } = useSettings();
   const showAddToCart = product.inStock && product.allowAddToCart !== false;
 
   const discountPercent = Math.round(
@@ -111,7 +113,7 @@ export default function ProductCard({ product, variant = 'default' }: ProductCar
               e.preventDefault();
               e.stopPropagation();
               const message = `Hi KALARANG! I'm interested in "${product.name}".`;
-              window.open(whatsAppUrl(message), '_blank');
+              window.open(whatsAppUrl(message, settings?.whatsappNumber), '_blank');
             }}
             className="absolute top-3 right-3 h-9 w-9 rounded-full bg-white/95 shadow-md flex items-center justify-center text-muted hover:text-maroon opacity-0 group-hover:opacity-100 transition-opacity"
             aria-label="Enquire"

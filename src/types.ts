@@ -82,6 +82,8 @@ export interface HeroVideo {
 export interface Settings {
   storeName: string;
   whatsappNumber: string;
+  email?: string;
+  studioAddress?: string;
   announcementBar: {
     enabled: boolean;
     text: string;

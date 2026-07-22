@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Mail, Phone, Sparkles, Heart, Palette } from 'lucide-react';
+import { ArrowRight, Mail, Phone, MapPin, Sparkles, Heart, Palette } from 'lucide-react';
 import MarketingPageShell from '../components/marketing/MarketingPageShell';
 import PageHero from '../components/marketing/PageHero';
 import { about, aboutValues, contact } from '../content/siteContent';
 import { useSettings } from '../hooks/useSettings';
+import { formatWhatsAppDisplay } from '../constants/contact';
 
 const valueIcons = [Sparkles, Heart, Palette];
 
@@ -66,15 +67,21 @@ export default function About() {
             Have questions about custom designs, fabric options, or our services? We would love to hear from you.
           </p>
 
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-8 mt-4 text-gray-700">
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-4 sm:gap-8 mt-4 text-gray-700">
             <div className="flex items-center gap-2">
               <Phone className="h-4.5 w-4.5 text-gold" />
-              <span>WhatsApp: +{settings?.whatsappNumber}</span>
+              <span>WhatsApp: {formatWhatsAppDisplay(settings?.whatsappNumber)}</span>
             </div>
             <div className="flex items-center gap-2">
               <Mail className="h-4.5 w-4.5 text-gold" />
-              <span>Email: {contact.email}</span>
+              <span>Email: {settings?.email || contact.email}</span>
             </div>
+            {(settings?.studioAddress || contact.address) ? (
+              <div className="flex items-start gap-2 max-w-md text-left">
+                <MapPin className="h-4.5 w-4.5 text-gold shrink-0 mt-0.5" />
+                <span className="whitespace-pre-line">{settings?.studioAddress || contact.address}</span>
+              </div>
+            ) : null}
           </div>
 
           <div className="flex flex-wrap justify-center gap-4 mt-4">

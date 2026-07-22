@@ -11,6 +11,8 @@ export default function AdminSettings() {
   const [announcementText, setAnnouncementText] = useState('✨ Handcrafted pure Banarasi silk sarees on display at our Studio Lobby. Buy now! ✨');
   const [showAnnouncement, setShowAnnouncement] = useState(true);
   const [whatsappNumber, setWhatsappNumber] = useState('+91 91089 55445');
+  const [email, setEmail] = useState('studio@kalarang.com');
+  const [studioAddress, setStudioAddress] = useState('');
   const [freeShippingThreshold, setFreeShippingThreshold] = useState(5000);
   const [firstOrderDiscountEnabled, setFirstOrderDiscountEnabled] = useState(true);
   const [firstOrderDiscountPercent, setFirstOrderDiscountPercent] = useState(10);
@@ -26,6 +28,8 @@ export default function AdminSettings() {
       setAnnouncementText(settings.announcementBar?.text || '');
       setShowAnnouncement(settings.announcementBar?.enabled ?? true);
       setWhatsappNumber(settings.whatsappNumber || '+91 91089 55445');
+      setEmail(settings.email || 'studio@kalarang.com');
+      setStudioAddress(settings.studioAddress || '');
       setFreeShippingThreshold(settings.freeShippingThreshold || 5000);
       setFirstOrderDiscountEnabled(settings.firstOrderDiscount?.enabled ?? true);
       setFirstOrderDiscountPercent(settings.firstOrderDiscount?.percent ?? 10);
@@ -41,6 +45,8 @@ export default function AdminSettings() {
       const payload: Settings = {
         storeName: logoText,
         whatsappNumber,
+        email,
+        studioAddress,
         announcementBar: {
           enabled: showAnnouncement,
           text: announcementText,
@@ -145,6 +151,33 @@ export default function AdminSettings() {
               <span className="text-[10px] text-gray-500 leading-normal">
                 This phone receives automatic purchase alerts and enquiry triggers. Format as numbers ONLY, e.g. `919876543210`.
               </span>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-[#1C1008] uppercase tracking-wider">
+                Studio Email
+              </label>
+              <input
+                type="email"
+                required
+                placeholder="e.g. studio@kalarang.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="bg-[#FDF8F2] border border-[#B8860B]/25 rounded px-3.5 py-2.5 text-sm focus:border-[#7A1C2E] focus:outline-none text-[#1C1008]"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-[#1C1008] uppercase tracking-wider">
+                Studio Address
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Full studio address shown on Contact and Footer"
+                value={studioAddress}
+                onChange={(e) => setStudioAddress(e.target.value)}
+                className="bg-[#FDF8F2] border border-[#B8860B]/25 rounded px-3.5 py-2.5 text-sm focus:border-[#7A1C2E] focus:outline-none resize-none text-[#1C1008]"
+              />
             </div>
 
             {/* Free Shipping parameters */}

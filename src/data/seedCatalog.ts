@@ -86,6 +86,15 @@ export const SEED_COLLECTIONS: SeedCollection[] = [
     isActive: true,
     description: 'Handcrafted blouses with intricate embroidery, zari work, and custom fits.',
   },
+  {
+    name: 'Dupattas',
+    slug: 'dupattas',
+    coverImage:
+      'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=600&q=80',
+    order: 8,
+    isActive: true,
+    description: 'Statement dupattas in silk, organza, and georgette to complete every look.',
+  },
 ];
 
 export const SEED_PRODUCTS: SeedProduct[] = [
@@ -98,7 +107,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     border: 'Broad Brocade Border',
     texture: 'Rich and smooth',
     occasions: ['Wedding', 'Festive'],
-    colors: ['Crimson', 'Gold'],
+    colors: ['Red', 'Crimson', 'Yellow', 'Gold'],
     mrp: 22000,
     salePrice: 18499,
     details: 'Pure silk Banarasi brocade with rich zari jaal work and a broad brocade border. Ideal for weddings and festive occasions.',
@@ -119,7 +128,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     border: 'Contrast Temple Border',
     texture: 'Structured drape',
     occasions: ['Wedding', 'Temple'],
-    colors: ['Maroon', 'Gold'],
+    colors: ['Red', 'Maroon', 'Yellow', 'Gold'],
     mrp: 28000,
     salePrice: 23999,
     images: [
@@ -138,7 +147,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     border: 'Scalloped Edge',
     texture: 'Sheer and airy',
     occasions: ['Festive', 'Gifting'],
-    colors: ['Pearl White', 'Silver'],
+    colors: ['White', 'Pearl White'],
     mrp: 14500,
     salePrice: 11999,
     images: [
@@ -157,7 +166,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     border: 'Minimal Zari Border',
     texture: 'Light and breathable',
     occasions: ['Office', 'Casual'],
-    colors: ['Sage Green', 'Ivory'],
+    colors: ['Green', 'Sage Green', 'White', 'Ivory'],
     mrp: 9800,
     salePrice: 8499,
     images: [
@@ -176,7 +185,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     border: 'Designer Cut Border',
     texture: 'Matte with subtle sheen',
     occasions: ['Festive', 'Party'],
-    colors: ['Emerald', 'Gold'],
+    colors: ['Green', 'Emerald', 'Yellow', 'Gold'],
     mrp: 16500,
     salePrice: 13999,
     images: [

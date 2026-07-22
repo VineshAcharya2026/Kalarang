@@ -9,6 +9,19 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import WhatsAppFAB from '../components/layout/WhatsAppFAB';
 import { MAX_PRICE_FILTER } from '../constants/filters';
+import { COLOR_FAMILIES } from '../constants/colors';
+
+function colorMatchesSelection(productColors: string[] | undefined, selected: string[]): boolean {
+  if (!productColors?.length) return false;
+  const productSet = new Set(productColors.map((c) => c.toLowerCase()));
+  return selected.some((sel) => {
+    const key = sel.toLowerCase();
+    if (productSet.has(key)) return true;
+    const family = COLOR_FAMILIES.find((f) => f.name.toLowerCase() === key);
+    if (!family) return false;
+    return family.shades.some((shade) => productSet.has(shade.toLowerCase()));
+  });
+}
 
 export default function CollectionPage() {
   const { slug } = useParams();
@@ -106,10 +119,9 @@ export default function CollectionPage() {
       if (!match) return false;
     }
     
-    // Colors matcher
+    // Colors matcher (main colour family matches its listed shades)
     if (selectedColors.length > 0) {
-      const match = product.colors?.some((color) => selectedColors.includes(color));
-      if (!match) return false;
+      if (!colorMatchesSelection(product.colors, selectedColors)) return false;
     }
 
     // Price range slider

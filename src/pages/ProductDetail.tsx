@@ -10,13 +10,15 @@ import AnnouncementBar from '../components/layout/AnnouncementBar';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import WhatsAppFAB from '../components/layout/WhatsAppFAB';
-import { whatsAppUrl, KALARANG_WHATSAPP_DISPLAY } from '../constants/contact';
+import { whatsAppUrl, formatWhatsAppDisplay } from '../constants/contact';
+import { useSettings } from '../hooks/useSettings';
 
 export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { products, loading: productsLoading } = useProducts();
   const { collections } = useCollections();
+  const { settings } = useSettings();
   const { addItem } = useCartStore();
 
   const [activeImage, setActiveImage] = useState<string>('');
@@ -95,7 +97,7 @@ export default function ProductDetail() {
 
   const handleWhatsAppEnquiry = () => {
     const messageText = `Hi KALARANG! I'm interested in the "${product.name}" saree (₹${product.salePrice.toLocaleString('en-IN')}). Please share more details.`;
-    window.open(whatsAppUrl(messageText), '_blank');
+    window.open(whatsAppUrl(messageText, settings?.whatsappNumber), '_blank');
   };
 
   const showAddToCart = product.inStock && product.allowAddToCart !== false;
@@ -274,7 +276,7 @@ export default function ProductDetail() {
                 className="flex-1 bg-[#25D366] hover:bg-[#20bd5a] text-white py-4.5 px-6 rounded text-xs tracking-widest font-sans font-bold uppercase transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
               >
                 <MessageSquare className="h-4.5 w-4.5 shrink-0" />
-                WhatsApp {KALARANG_WHATSAPP_DISPLAY}
+                WhatsApp {formatWhatsAppDisplay(settings?.whatsappNumber)}
               </button>
             </div>
 

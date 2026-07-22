@@ -1,11 +1,17 @@
 import React from 'react';
 import { MessageSquare, Instagram } from 'lucide-react';
 import { whatsAppUrl } from '../../constants/contact';
+import { useSettings } from '../../hooks/useSettings';
 
 export default function WhatsAppFAB() {
+  const { settings } = useSettings();
+
   const handleWhatsAppRedirect = () => {
     window.open(
-      whatsAppUrl("Hi KALARANG! I'd love to enquire about your collections."),
+      whatsAppUrl(
+        "Hi KALARANG! I'd love to enquire about your collections.",
+        settings?.whatsappNumber
+      ),
       '_blank'
     );
   };

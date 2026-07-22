@@ -14,10 +14,10 @@ export default function ColorSection() {
       <HomeSection>
         <CenteredSectionHeader
           title="Shop by Colour"
-          subtitle="Explore curated shades across our signature colour families."
+          subtitle="Browse by our main colours — ask us for the exact shade when you enquire."
         />
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 sm:gap-5">
           {COLOR_FAMILIES.map((family, index) => (
             <motion.div
               key={family.name}
@@ -27,24 +27,32 @@ export default function ColorSection() {
               transition={{ duration: 0.45, delay: index * 0.06, ease }}
               className="flex flex-col items-center text-center gap-3"
             >
-              <div
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-gold/30 shadow-sm"
-                style={{ backgroundColor: family.swatch }}
-                aria-hidden
-              />
-              <p className="text-xs font-semibold tracking-[0.12em] uppercase text-espresso">
-                {family.name}
-              </p>
+              <Link
+                to={`/collections/all?color=${encodeURIComponent(family.name)}`}
+                className="flex flex-col items-center gap-3 group"
+                aria-label={`Shop ${family.name}`}
+              >
+                <div
+                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-2 border-gold/30 shadow-sm group-hover:border-maroon transition-colors"
+                  style={{ backgroundColor: family.swatch }}
+                  aria-hidden
+                />
+                <p className="text-xs font-semibold tracking-[0.12em] uppercase text-espresso group-hover:text-maroon transition-colors">
+                  {family.name}
+                </p>
+              </Link>
               <div className="flex flex-wrap justify-center gap-1.5">
-                {family.shades.map((shade) => (
-                  <Link
-                    key={shade}
-                    to={`/collections/all?color=${encodeURIComponent(shade)}`}
-                    className="px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-medium border border-gold/20 bg-cream text-espresso hover:bg-maroon hover:text-white hover:border-transparent transition-colors"
-                  >
-                    {shade}
-                  </Link>
-                ))}
+                {family.shades
+                  .filter((shade) => shade !== family.name)
+                  .map((shade) => (
+                    <Link
+                      key={shade}
+                      to={`/collections/all?color=${encodeURIComponent(shade)}`}
+                      className="px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-medium border border-gold/20 bg-cream text-espresso hover:bg-maroon hover:text-white hover:border-transparent transition-colors"
+                    >
+                      {shade}
+                    </Link>
+                  ))}
               </div>
             </motion.div>
           ))}

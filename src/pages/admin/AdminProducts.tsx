@@ -4,7 +4,9 @@ import { useCollections } from '../../hooks/useCollections';
 import { uploadFiles } from '../../firebase/storageUpload';
 import { getFirebaseErrorMessage } from '../../firebase/errors';
 import { Product } from '../../types';
-import { KALARANG_WHATSAPP_DISPLAY } from '../../constants/contact';
+import { formatWhatsAppDisplay } from '../../constants/contact';
+import { MAIN_COLORS } from '../../constants/colors';
+import { useSettings } from '../../hooks/useSettings';
 import {
   Plus,
   Edit,
@@ -30,6 +32,7 @@ function slugFromName(name: string): string {
 export default function AdminProducts() {
   const { products, loading, error, addProduct, updateProduct, deleteProduct } = useProducts();
   const { collections } = useCollections();
+  const { settings } = useSettings();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -37,6 +40,7 @@ export default function AdminProducts() {
   const [name, setName] = useState('');
   const [collectionId, setCollectionId] = useState('');
   const [details, setDetails] = useState('');
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [mrp, setMrp] = useState(0);
   const [salePrice, setSalePrice] = useState(0);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -81,6 +85,7 @@ export default function AdminProducts() {
     setName('');
     setCollectionId(collections[0]?.id || '');
     setDetails('');
+    setSelectedColors([]);
     setMrp(0);
     setSalePrice(0);
     setImageFiles([]);
@@ -106,6 +111,9 @@ export default function AdminProducts() {
     setName(prod.name);
     setCollectionId(prod.collectionId);
     setDetails(prod.details || '');
+    setSelectedColors(
+      (prod.colors || []).filter((color) => color && color !== 'Standard')
+    );
     setMrp(prod.mrp);
     setSalePrice(prod.salePrice);
     setImageFiles([]);
@@ -119,6 +127,12 @@ export default function AdminProducts() {
     setFormError(null);
     setUploadProgress(0);
     setIsFormOpen(true);
+  };
+
+  const toggleColor = (color: string) => {
+    setSelectedColors((prev) =>
+      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]
+    );
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -165,7 +179,7 @@ export default function AdminProducts() {
         border: '',
         texture: '',
         occasions: [] as string[],
-        colors: ['Standard'],
+        colors: selectedColors.length > 0 ? selectedColors : ['Standard'],
         mrp: effectiveMrp,
         salePrice,
         details: details.trim(),
@@ -463,6 +477,31 @@ export default function AdminProducts() {
               </div>
 
               <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider">
+                  Colours
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {MAIN_COLORS.map((color) => {
+                    const active = selectedColors.includes(color);
+                    return (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => toggleColor(color)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                          active
+                            ? 'bg-[#7A1C2E] text-white border-[#7A1C2E]'
+                            : 'bg-[#FDF8F2] text-[#1C1008] border-[#B8860B]/25 hover:border-[#7A1C2E]'
+                        }`}
+                      >
+                        {color}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider">Details</label>
                 <textarea
                   rows={4}
@@ -562,7 +601,7 @@ export default function AdminProducts() {
 
               <p className="text-[10px] text-gray-500 bg-green-50 border border-green-200 rounded p-2.5">
                 WhatsApp enquiries redirect to{' '}
-                <strong className="text-green-800">{KALARANG_WHATSAPP_DISPLAY}</strong>
+                <strong className="text-green-800">{formatWhatsAppDisplay(settings?.whatsappNumber)}</strong>
               </p>
 
               <div className="border-t border-[#B8860B]/10 pt-4 flex justify-end gap-x-2">

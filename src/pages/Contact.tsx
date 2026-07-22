@@ -1,13 +1,17 @@
 import React from 'react';
-import { Mail, Phone } from 'lucide-react';
+import { Mail, Phone, MapPin } from 'lucide-react';
 import MarketingPageShell from '../components/marketing/MarketingPageShell';
 import PageHero from '../components/marketing/PageHero';
 import ConsultationForm from '../components/forms/ConsultationForm';
 import { contact } from '../content/siteContent';
 import { useSettings } from '../hooks/useSettings';
+import { formatWhatsAppDisplay } from '../constants/contact';
 
 export default function ContactPage() {
   const { settings } = useSettings();
+  const email = settings?.email || contact.email;
+  const address = settings?.studioAddress || contact.address;
+  const whatsappDisplay = formatWhatsAppDisplay(settings?.whatsappNumber);
 
   return (
     <MarketingPageShell id="contact-page">
@@ -25,16 +29,27 @@ export default function ContactPage() {
                 <Phone className="h-5 w-5 text-gold shrink-0 mt-0.5" />
                 <div>
                   <p className="font-bold text-espresso uppercase text-xs tracking-wider">WhatsApp</p>
-                  <p>+{settings?.whatsappNumber}</p>
+                  <p>{whatsappDisplay}</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
                 <Mail className="h-5 w-5 text-gold shrink-0 mt-0.5" />
                 <div>
                   <p className="font-bold text-espresso uppercase text-xs tracking-wider">Email</p>
-                  <p>{contact.email}</p>
+                  <a href={`mailto:${email}`} className="hover:text-maroon transition-colors">
+                    {email}
+                  </a>
                 </div>
               </li>
+              {address ? (
+                <li className="flex items-start gap-3">
+                  <MapPin className="h-5 w-5 text-gold shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold text-espresso uppercase text-xs tracking-wider">Address</p>
+                    <p className="whitespace-pre-line">{address}</p>
+                  </div>
+                </li>
+              ) : null}
             </ul>
           </div>
 
