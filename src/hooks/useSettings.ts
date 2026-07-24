@@ -10,7 +10,7 @@ const DEFAULT_SETTINGS: Settings = {
   studioAddress: '',
   announcementBar: {
     enabled: true,
-    text: '✨ Free Shipping above ₹5000 | 10% off your first KALARANG order ✨'
+    text: '✨ Every first order 10% off ✨'
   },
   freeShippingThreshold: 5000,
   firstOrderDiscount: { enabled: true, percent: 10 },

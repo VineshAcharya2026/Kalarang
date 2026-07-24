@@ -8,7 +8,7 @@ export default function AdminSettings() {
 
   // Settings State Form
   const [logoText, setLogoText] = useState('KALARANG');
-  const [announcementText, setAnnouncementText] = useState('✨ Handcrafted pure Banarasi silk sarees on display at our Studio Lobby. Buy now! ✨');
+  const [announcementText, setAnnouncementText] = useState('✨ Every first order 10% off ✨');
   const [showAnnouncement, setShowAnnouncement] = useState(true);
   const [whatsappNumber, setWhatsappNumber] = useState('+91 91089 55445');
   const [email, setEmail] = useState('studio@kalarang.com');
