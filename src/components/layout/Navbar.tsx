@@ -23,7 +23,7 @@ export default function Navbar({ searchQuery, onSearchChange }: NavbarProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState('');
   const [shopOpen, setShopOpen] = useState(false);
-  const { collections } = useCollections();
+  const { collections } = useCollections({ includeSeedFallbacks: true });
   const { itemCount } = useCartStore();
   const location = useLocation();
   const navigate = useNavigate();

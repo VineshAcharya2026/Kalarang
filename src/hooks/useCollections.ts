@@ -1,19 +1,21 @@
-import { useState, useEffect } from 'react';
-import { 
-  collection, 
-  onSnapshot, 
-  addDoc, 
-  updateDoc, 
-  doc, 
-  query, 
+import { useState, useEffect, useMemo } from 'react';
+import {
+  collection,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  doc,
+  query,
   orderBy,
-  deleteDoc
+  deleteDoc,
 } from 'firebase/firestore';
 import { db, OperationType, handleFirestoreError } from '../firebase/config';
 import { Collection } from '../types';
+import { mergeSeedCollections } from '../utils/mergeSeedCollections';
 
-export function useCollections() {
-  const [collections, setCollections] = useState<Collection[]>([]);
+export function useCollections(options?: { includeSeedFallbacks?: boolean }) {
+  const includeSeedFallbacks = options?.includeSeedFallbacks ?? false;
+  const [firestoreCollections, setFirestoreCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,11 +25,11 @@ export function useCollections() {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const items = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
+        const items = snapshot.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
         })) as Collection[];
-        setCollections(items);
+        setFirestoreCollections(items);
         setLoading(false);
       },
       (err) => {
@@ -39,6 +41,11 @@ export function useCollections() {
 
     return () => unsubscribe();
   }, []);
+
+  const collections = useMemo(() => {
+    if (!includeSeedFallbacks) return firestoreCollections;
+    return mergeSeedCollections(firestoreCollections, { requiredOnly: true });
+  }, [firestoreCollections, includeSeedFallbacks]);
 
   const addCollection = async (collectionData: Omit<Collection, 'id'>) => {
     try {
@@ -52,6 +59,9 @@ export function useCollections() {
   };
 
   const updateCollection = async (id: string, collectionData: Partial<Collection>) => {
+    if (id.startsWith('seed:')) {
+      throw new Error('Seed fallback categories cannot be edited. Add them in Admin → Collections first.');
+    }
     try {
       const docRef = doc(db, 'collections', id);
       await updateDoc(docRef, {
@@ -63,6 +73,9 @@ export function useCollections() {
   };
 
   const deleteCollection = async (id: string) => {
+    if (id.startsWith('seed:')) {
+      throw new Error('Seed fallback categories cannot be deleted.');
+    }
     try {
       const docRef = doc(db, 'collections', id);
       await deleteDoc(docRef);

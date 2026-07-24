@@ -27,7 +27,9 @@ export default function CollectionPage() {
   const { slug } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const { products, loading: productsLoading } = useProducts();
-  const { collections, loading: collectionsLoading } = useCollections();
+  const { collections, loading: collectionsLoading } = useCollections({
+    includeSeedFallbacks: true,
+  });
 
   // Filters State
   const [selectedOccasions, setSelectedOccasions] = useState<string[]>([]);

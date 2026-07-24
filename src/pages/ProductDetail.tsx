@@ -17,7 +17,7 @@ export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { products, loading: productsLoading } = useProducts();
-  const { collections } = useCollections();
+  const { collections } = useCollections({ includeSeedFallbacks: true });
   const { settings } = useSettings();
   const { addItem } = useCartStore();
 

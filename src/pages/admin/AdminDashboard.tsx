@@ -4,6 +4,7 @@ import { useCollections } from '../../hooks/useCollections';
 import { useOrders } from '../../hooks/useOrders';
 import { Order } from '../../types';
 import { seedCatalog, SAMPLE_PRODUCT_COUNT } from '../../utils/seedCatalog';
+import { REQUIRED_CATEGORY_SLUGS } from '../../utils/mergeSeedCollections';
 import { 
   ShoppingBag, 
   Sparkles, 
@@ -50,7 +51,13 @@ export default function AdminDashboard() {
     .filter((o) => o.status !== 'pending') // Only completed/confirmed orders contribute to definitive sales indicators
     .reduce((sum, o) => sum + o.total, 0);
 
+  const existingSlugs = new Set(collections.map((c) => c.slug));
+  const missingRequiredCategories = REQUIRED_CATEGORY_SLUGS.filter(
+    (slug) => !existingSlugs.has(slug)
+  );
   const catalogNeedsProducts = totalProductsCount < SAMPLE_PRODUCT_COUNT;
+  const catalogNeedsCategories = missingRequiredCategories.length > 0;
+  const showCatalogSeed = catalogNeedsProducts || catalogNeedsCategories;
 
   const handleLoadSampleCatalog = async () => {
     setSeeding(true);
@@ -130,7 +137,7 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      {catalogNeedsProducts && (
+      {showCatalogSeed && (
         <div className="bg-[#FDF8F2] border border-[#B8860B]/20 rounded-md p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="p-2.5 bg-[#B8860B]/10 rounded-full shrink-0">
@@ -138,12 +145,18 @@ export default function AdminDashboard() {
             </div>
             <div>
               <h2 className="font-serif text-lg font-bold text-[#1C1008] uppercase">
-                {totalProductsCount === 0 ? 'No Sarees Yet' : 'Add Sample Sarees'}
+                {catalogNeedsCategories && !catalogNeedsProducts
+                  ? 'Missing Categories'
+                  : totalProductsCount === 0
+                    ? 'No Sarees Yet'
+                    : 'Add Sample Catalog'}
               </h2>
               <p className="text-xs text-gray-500 mt-1 max-w-md">
-                {totalProductsCount === 0
-                  ? `Add ${SAMPLE_PRODUCT_COUNT} sample sarees with categories, images, and pricing to populate the homepage.`
-                  : `${totalProductsCount} of ${SAMPLE_PRODUCT_COUNT} sample sarees loaded — add the remaining ones.`}
+                {catalogNeedsCategories
+                  ? `Add missing categories (${missingRequiredCategories.join(', ')}) to Firestore. Seed also fills sample sarees if needed.`
+                  : totalProductsCount === 0
+                    ? `Add ${SAMPLE_PRODUCT_COUNT} sample sarees with categories, images, and pricing to populate the homepage.`
+                    : `${totalProductsCount} of ${SAMPLE_PRODUCT_COUNT} sample sarees loaded — add the remaining ones.`}
               </p>
               {seedMessage && (
                 <p
@@ -167,6 +180,8 @@ export default function AdminDashboard() {
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Loading...
               </>
+            ) : catalogNeedsCategories && !catalogNeedsProducts ? (
+              'Add Missing Categories'
             ) : (
               `Add ${SAMPLE_PRODUCT_COUNT} Sample Sarees`
             )}

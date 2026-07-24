@@ -8,7 +8,7 @@ import { formatWhatsAppDisplay, normalizeWhatsAppNumber } from '../../constants/
 
 export default function Footer() {
   const { settings } = useSettings();
-  const { collections } = useCollections();
+  const { collections } = useCollections({ includeSeedFallbacks: true });
   const activeCollections = collections.filter((c) => c.isActive).slice(0, 6);
   const year = new Date().getFullYear();
   const email = settings?.email || contact.email;

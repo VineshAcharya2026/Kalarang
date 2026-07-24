@@ -21,7 +21,9 @@ import { hero } from '../content/siteContent';
 
 export default function Home() {
   const { products, loading: productsLoading } = useProducts();
-  const { collections, loading: collectionsLoading } = useCollections();
+  const { collections, loading: collectionsLoading } = useCollections({
+    includeSeedFallbacks: true,
+  });
   const { banners } = useBanners();
   const { videos } = useVideos();
   const location = useLocation();
