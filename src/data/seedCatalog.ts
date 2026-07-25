@@ -113,7 +113,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     details: 'Pure silk Banarasi brocade with rich zari jaal work and a broad brocade border. Ideal for weddings and festive occasions.',
     allowAddToCart: true,
     images: [
-      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1717835943315-b818e90cb2a1?auto=format&fit=crop&w=800&q=80',
     ],
     isFeatured: true,
     isNewArrival: true,
@@ -132,7 +132,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     mrp: 28000,
     salePrice: 23999,
     images: [
-      'https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80',
     ],
     isFeatured: true,
     isNewArrival: false,
@@ -151,7 +151,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     mrp: 14500,
     salePrice: 11999,
     images: [
-      'https://images.unsplash.com/photo-1610030469854-2c069b3f3b90?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1678705730064-a7ecbab4b3fb?auto=format&fit=crop&w=800&q=80',
     ],
     isFeatured: true,
     isNewArrival: true,
@@ -170,7 +170,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     mrp: 9800,
     salePrice: 8499,
     images: [
-      'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1717585679395-bbe39b5fb6bc?auto=format&fit=crop&w=800&q=80',
     ],
     isFeatured: true,
     isNewArrival: false,
@@ -189,7 +189,7 @@ export const SEED_PRODUCTS: SeedProduct[] = [
     mrp: 16500,
     salePrice: 13999,
     images: [
-      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1679006831648-7c9ea12e5807?auto=format&fit=crop&w=800&q=80',
     ],
     isFeatured: true,
     isNewArrival: true,

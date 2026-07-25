@@ -19,7 +19,13 @@ import {
   Coins,
   AlertCircle,
   Video,
+  Star,
+  Replace,
 } from 'lucide-react';
+import {
+  DEFAULT_PRODUCT_IMAGE,
+  getProductImageByTitle,
+} from '../../utils/productImageByTitle';
 
 function slugFromName(name: string): string {
   return name
@@ -43,9 +49,12 @@ export default function AdminProducts() {
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [mrp, setMrp] = useState(0);
   const [salePrice, setSalePrice] = useState(0);
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [addFiles, setAddFiles] = useState<File[]>([]);
+  const [replaceFiles, setReplaceFiles] = useState<Record<number, File>>({});
+  const [replacePreviewUrls, setReplacePreviewUrls] = useState<Record<number, string>>({});
+  const [addPreviewUrls, setAddPreviewUrls] = useState<string[]>([]);
+  const [replaceTargetIndex, setReplaceTargetIndex] = useState<number | null>(null);
   const [videoUrl, setVideoUrl] = useState('');
   const [inStock, setInStock] = useState(true);
   const [isFeatured, setIsFeatured] = useState(false);
@@ -57,20 +66,112 @@ export default function AdminProducts() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files) as File[];
-      setImageFiles(filesArray);
-      const newPreviews = filesArray.map((file) => URL.createObjectURL(file));
-      setImagePreviews([...imageUrls, ...newPreviews]);
-    }
+  const replaceInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return;
+    const filesArray = Array.from(e.target.files) as File[];
+    setAddFiles((prev) => [...prev, ...filesArray]);
+    setAddPreviewUrls((prev) => [
+      ...prev,
+      ...filesArray.map((file) => URL.createObjectURL(file)),
+    ]);
+    e.target.value = '';
   };
 
   const handleImageUrlsChange = (value: string) => {
     const urls = value.split(',').map((u) => u.trim()).filter(Boolean);
     setImageUrls(urls);
-    const localPreviews = imagePreviews.filter((p) => p.startsWith('blob:'));
-    setImagePreviews([...urls, ...localPreviews]);
+    setReplaceFiles({});
+    setReplacePreviewUrls({});
+  };
+
+  const removeImageAt = (index: number) => {
+    setImageUrls((prev) => prev.filter((_, i) => i !== index));
+    setReplaceFiles((prev) => {
+      const next: Record<number, File> = {};
+      Object.entries(prev).forEach(([k, file]) => {
+        const i = Number(k);
+        if (i === index) return;
+        next[i > index ? i - 1 : i] = file;
+      });
+      return next;
+    });
+    setReplacePreviewUrls((prev) => {
+      const next: Record<number, string> = {};
+      Object.entries(prev).forEach(([k, url]) => {
+        const i = Number(k);
+        if (i === index) return;
+        next[i > index ? i - 1 : i] = url;
+      });
+      return next;
+    });
+  };
+
+  const setPrimaryImage = (index: number) => {
+    if (index <= 0) return;
+    setImageUrls((prev) => {
+      const next = [...prev];
+      const [item] = next.splice(index, 1);
+      next.unshift(item);
+      return next;
+    });
+    setReplaceFiles((prev) => {
+      if (!prev[index] && !prev[0]) return prev;
+      const next: Record<number, File> = {};
+      Object.entries(prev).forEach(([k, file]) => {
+        const i = Number(k);
+        if (i === index) next[0] = file;
+        else if (i < index) next[i + 1] = file;
+        else next[i] = file;
+      });
+      return next;
+    });
+    setReplacePreviewUrls((prev) => {
+      if (!prev[index] && !prev[0]) return prev;
+      const next: Record<number, string> = {};
+      Object.entries(prev).forEach(([k, url]) => {
+        const i = Number(k);
+        if (i === index) next[0] = url;
+        else if (i < index) next[i + 1] = url;
+        else next[i] = url;
+      });
+      return next;
+    });
+  };
+
+  const startReplaceAt = (index: number) => {
+    setReplaceTargetIndex(index);
+    replaceInputRef.current?.click();
+  };
+
+  const handleReplaceFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const index = replaceTargetIndex;
+    e.target.value = '';
+    setReplaceTargetIndex(null);
+    if (!file || index === null) return;
+    const preview = URL.createObjectURL(file);
+    setReplaceFiles((prev) => ({ ...prev, [index]: file }));
+    setReplacePreviewUrls((prev) => ({ ...prev, [index]: preview }));
+  };
+
+  const removePendingAdd = (index: number) => {
+    setAddFiles((prev) => prev.filter((_, i) => i !== index));
+    setAddPreviewUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const applyTitleMatchedImage = () => {
+    const matched = getProductImageByTitle(name);
+    if (!matched) {
+      alert('No stock image mapped for this exact product title yet.');
+      return;
+    }
+    setImageUrls([matched]);
+    setReplaceFiles({});
+    setReplacePreviewUrls({});
+    setAddFiles([]);
+    setAddPreviewUrls([]);
   };
 
   const handleQuickUpdate = async (id: string, data: Partial<Product>) => {
@@ -88,9 +189,12 @@ export default function AdminProducts() {
     setSelectedColors([]);
     setMrp(0);
     setSalePrice(0);
-    setImageFiles([]);
     setImageUrls([]);
-    setImagePreviews([]);
+    setAddFiles([]);
+    setReplaceFiles({});
+    setReplacePreviewUrls({});
+    setAddPreviewUrls([]);
+    setReplaceTargetIndex(null);
     setVideoUrl('');
     setInStock(true);
     setIsFeatured(false);
@@ -116,9 +220,12 @@ export default function AdminProducts() {
     );
     setMrp(prod.mrp);
     setSalePrice(prod.salePrice);
-    setImageFiles([]);
     setImageUrls(prod.images || []);
-    setImagePreviews(prod.images || []);
+    setAddFiles([]);
+    setReplaceFiles({});
+    setReplacePreviewUrls({});
+    setAddPreviewUrls([]);
+    setReplaceTargetIndex(null);
     setVideoUrl(prod.videoUrl || '');
     setInStock(prod.inStock);
     setIsFeatured(prod.isFeatured);
@@ -147,18 +254,38 @@ export default function AdminProducts() {
 
     try {
       let finalImages = [...imageUrls];
+      const replaceEntries = Object.entries(replaceFiles);
+      const needsUpload = replaceEntries.length > 0 || addFiles.length > 0;
 
-      if (imageFiles.length > 0) {
+      if (needsUpload) {
         setUploading(true);
         setUploadProgress(0);
-        const uploadedUrls = await uploadFiles(imageFiles, {
+      }
+
+      for (const [indexStr, file] of replaceEntries) {
+        const index = Number(indexStr);
+        const [url] = await uploadFiles([file], {
           folder: 'products',
           maxSizeMb: 10,
           onProgress: setUploadProgress,
         });
-        finalImages = editingId
-          ? [...imageUrls.filter((u) => u.startsWith('http')), ...uploadedUrls]
-          : [...finalImages, ...uploadedUrls];
+        if (url) finalImages[index] = url;
+      }
+
+      if (addFiles.length > 0) {
+        const uploadedUrls = await uploadFiles(addFiles, {
+          folder: 'products',
+          maxSizeMb: 10,
+          onProgress: setUploadProgress,
+        });
+        finalImages = [...finalImages, ...uploadedUrls];
+      }
+
+      finalImages = finalImages.filter(Boolean);
+
+      if (!editingId && finalImages.length === 0) {
+        const matched = getProductImageByTitle(name);
+        finalImages = [matched || DEFAULT_PRODUCT_IMAGE];
       }
 
       const collectionName =
@@ -185,10 +312,7 @@ export default function AdminProducts() {
         details: details.trim(),
         videoUrl: videoUrl.trim(),
         allowAddToCart,
-        images:
-          finalImages.length > 0
-            ? finalImages
-            : ['https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80'],
+        images: finalImages,
         inStock,
         isFeatured,
         isNewArrival,
@@ -201,7 +325,8 @@ export default function AdminProducts() {
       }
 
       setIsFormOpen(false);
-      setImageFiles([]);
+      setAddFiles([]);
+      setReplaceFiles({});
       setUploadProgress(0);
     } catch (err) {
       console.error('Failed to submit product:', err);
@@ -221,6 +346,37 @@ export default function AdminProducts() {
     }
   };
 
+  const handleMatchStockImages = async () => {
+    const active = products.filter((p) => !p.isDeleted);
+    const updates = active
+      .map((p) => {
+        const matched = getProductImageByTitle(p.name);
+        return matched ? { id: p.id, name: p.name, image: matched } : null;
+      })
+      .filter(Boolean) as { id: string; name: string; image: string }[];
+
+    if (updates.length === 0) {
+      alert('No products matched known title image maps.');
+      return;
+    }
+    if (
+      !window.confirm(
+        `Replace primary images for ${updates.length} product(s) with title-matched stock photos?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      for (const item of updates) {
+        await updateProduct(item.id, { images: [item.image] });
+      }
+      alert(`Updated images for ${updates.length} product(s).`);
+    } catch (err) {
+      alert(getFirebaseErrorMessage(err, 'Failed to update product images.'));
+    }
+  };
+
   return (
     <div id="admin-inventory-products" className="flex flex-col gap-6 font-sans text-xs sm:text-sm">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#B8860B]/15 pb-4">
@@ -232,13 +388,23 @@ export default function AdminProducts() {
             Add sarees with image or video, details, cart, and WhatsApp enquiry.
           </p>
         </div>
-        <button
-          onClick={openAddForm}
-          className="inline-flex items-center gap-2 bg-[#7A1C2E] hover:bg-[#1C1008] text-white py-2.5 px-5 rounded text-xs font-extrabold uppercase transition-all shadow cursor-pointer"
-        >
-          <Plus className="h-4.5 w-4.5 shrink-0" />
-          Add New Saree
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={handleMatchStockImages}
+            className="inline-flex items-center gap-2 border border-[#B8860B] text-[#7A1C2E] hover:bg-[#B8860B]/10 py-2.5 px-4 rounded text-xs font-extrabold uppercase transition-all cursor-pointer"
+          >
+            <Replace className="h-4 w-4 shrink-0" />
+            Match Stock Images
+          </button>
+          <button
+            onClick={openAddForm}
+            className="inline-flex items-center gap-2 bg-[#7A1C2E] hover:bg-[#1C1008] text-white py-2.5 px-5 rounded text-xs font-extrabold uppercase transition-all shadow cursor-pointer"
+          >
+            <Plus className="h-4.5 w-4.5 shrink-0" />
+            Add New Saree
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -513,16 +679,105 @@ export default function AdminProducts() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold uppercase tracking-wider">
-                  Product Image
-                </label>
+                <div className="flex items-center justify-between gap-2">
+                  <label className="text-xs font-bold uppercase tracking-wider">
+                    Product Images
+                  </label>
+                  <button
+                    type="button"
+                    onClick={applyTitleMatchedImage}
+                    className="text-[10px] font-bold uppercase tracking-wider text-[#7A1C2E] hover:underline"
+                  >
+                    Use title-matched stock image
+                  </button>
+                </div>
+
+                <input
+                  ref={replaceInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleReplaceFileSelected}
+                />
+
+                {(imageUrls.length > 0 || addPreviewUrls.length > 0) && (
+                  <div className="flex flex-wrap gap-3 p-2 bg-gray-50 rounded border border-[#B8860B]/10">
+                    {imageUrls.map((url, index) => {
+                      const preview = replacePreviewUrls[index] || url;
+                      return (
+                        <div
+                          key={`img-${index}`}
+                          className="relative w-20 aspect-[3/4] bg-white rounded border border-[#B8860B]/20 overflow-hidden shrink-0 group"
+                        >
+                          <img src={preview} alt="" className="w-full h-full object-cover" />
+                          {index === 0 && (
+                            <span className="absolute top-1 left-1 text-[9px] font-bold uppercase bg-[#7A1C2E] text-white px-1.5 py-0.5 rounded">
+                              Primary
+                            </span>
+                          )}
+                          <div className="absolute inset-x-0 bottom-0 flex gap-0.5 p-1 bg-black/55 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                            <button
+                              type="button"
+                              title="Replace"
+                              onClick={() => startReplaceAt(index)}
+                              className="flex-1 h-6 flex items-center justify-center text-white hover:bg-white/20 rounded"
+                            >
+                              <Replace className="h-3 w-3" />
+                            </button>
+                            {index > 0 && (
+                              <button
+                                type="button"
+                                title="Set primary"
+                                onClick={() => setPrimaryImage(index)}
+                                className="flex-1 h-6 flex items-center justify-center text-white hover:bg-white/20 rounded"
+                              >
+                                <Star className="h-3 w-3" />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              title="Remove"
+                              onClick={() => removeImageAt(index)}
+                              className="flex-1 h-6 flex items-center justify-center text-white hover:bg-red-500/80 rounded"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {addPreviewUrls.map((preview, index) => (
+                      <div
+                        key={`add-${index}`}
+                        className="relative w-20 aspect-[3/4] bg-white rounded border border-dashed border-[#B8860B]/40 overflow-hidden shrink-0"
+                      >
+                        <img src={preview} alt="" className="w-full h-full object-cover" />
+                        <span className="absolute top-1 left-1 text-[9px] font-bold uppercase bg-[#B8860B] text-white px-1.5 py-0.5 rounded">
+                          New
+                        </span>
+                        <button
+                          type="button"
+                          title="Remove"
+                          onClick={() => removePendingAdd(index)}
+                          className="absolute bottom-1 right-1 h-6 w-6 flex items-center justify-center text-white bg-black/55 hover:bg-red-500/80 rounded"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="border border-dashed border-[#B8860B]/30 p-4 rounded bg-[#FDF8F2] flex flex-col items-center gap-2">
                   <ImageIcon className="h-6 w-6 text-[#B8860B]" />
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                    Add images
+                  </label>
                   <input
                     type="file"
                     multiple
                     accept="image/*"
-                    onChange={handleImageFileChange}
+                    onChange={handleAddImages}
                     className="text-xs text-gray-500 w-full"
                   />
                   <input
@@ -533,18 +788,6 @@ export default function AdminProducts() {
                     className="w-full bg-white border border-[#B8860B]/20 rounded text-xs p-2 focus:outline-none mt-1"
                   />
                 </div>
-                {imagePreviews.length > 0 && (
-                  <div className="flex flex-wrap gap-2 p-2 bg-gray-50 rounded">
-                    {imagePreviews.map((pre, id) => (
-                      <div
-                        key={id}
-                        className="w-14 aspect-[3/4] bg-white rounded border overflow-hidden shrink-0"
-                      >
-                        <img src={pre} alt="" className="w-full h-full object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
 
               <div className="flex flex-col gap-1.5">
