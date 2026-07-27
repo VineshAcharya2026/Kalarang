@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useCollections } from '../../hooks/useCollections';
 import { Collection } from '../../types';
 import { uploadFile } from '../../firebase/storageUpload';
-import { Plus, Edit, Trash2, X, Image as ImageIcon, Loader2, ArrowUpDown } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Image as ImageIcon, Loader2, ArrowUpDown, Replace } from 'lucide-react';
 
 export default function AdminCollections() {
   const { collections, addCollection, updateCollection, deleteCollection } = useCollections();
@@ -22,6 +22,7 @@ export default function AdminCollections() {
 
   // Status flags
   const [submitting, setSubmitting] = useState(false);
+  const replaceInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -29,6 +30,13 @@ export default function AdminCollections() {
       setCoverImageFile(file);
       setCoverImagePreview(URL.createObjectURL(file));
     }
+    e.target.value = '';
+  };
+
+  const clearCoverImage = () => {
+    setCoverImageFile(null);
+    setCoverImageUrl('');
+    setCoverImagePreview('');
   };
 
   const openAddForm = () => {
@@ -288,37 +296,56 @@ export default function AdminCollections() {
                 <label className="text-xs font-bold text-[#1C1008] uppercase tracking-wider">
                   Collection Cover Banner Thumbnail
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* File */}
-                  <div className="border border-dashed border-[#B8860B]/30 p-4 rounded bg-[#FDF8F2] flex flex-col items-center justify-center gap-1 text-center">
-                    <ImageIcon className="h-5 w-5 text-[#B8860B]" />
-                    <span className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Select Cover file</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="text-[10px] text-gray-500 w-full"
-                    />
-                  </div>
-
-                  {/* Fallback */}
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none">Fallback Cover URL</span>
-                    <input
-                      type="text"
-                      placeholder="https://images.unsplash.com/..."
-                      value={coverImageUrl}
-                      onChange={(e) => setCoverImageUrl(e.target.value)}
-                      className="bg-[#FDF8F2] border border-[#B8860B]/20 rounded text-xs p-2 focus:outline-none text-[#1C1008]"
-                    />
-                  </div>
-                </div>
-
-                {coverImagePreview && (
-                  <div className="mt-1 relative w-20 h-20 border border-[#B8860B]/10 rounded overflow-hidden shadow-sm bg-neutral-150">
+                <input
+                  ref={replaceInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                {coverImagePreview ? (
+                  <div className="relative w-28 h-28 border border-[#B8860B]/20 rounded overflow-hidden shadow-sm bg-neutral-100">
                     <img src={coverImagePreview} alt="cover thumbnail preview" className="w-full h-full object-cover" />
+                    <div className="absolute inset-x-0 bottom-0 flex gap-0.5 p-1 bg-black/55">
+                      <button
+                        type="button"
+                        onClick={() => replaceInputRef.current?.click()}
+                        className="flex-1 inline-flex items-center justify-center gap-0.5 text-white text-[9px] font-bold uppercase py-1 rounded hover:bg-white/20"
+                      >
+                        <Replace className="h-3 w-3" /> Replace
+                      </button>
+                      <button
+                        type="button"
+                        onClick={clearCoverImage}
+                        className="flex-1 inline-flex items-center justify-center gap-0.5 text-white text-[9px] font-bold uppercase py-1 rounded hover:bg-red-500/80"
+                      >
+                        <Trash2 className="h-3 w-3" /> Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border border-dashed border-[#B8860B]/30 p-4 rounded bg-[#FDF8F2] flex flex-col items-center justify-center gap-2 text-center">
+                    <ImageIcon className="h-5 w-5 text-[#B8860B]" />
+                    <button
+                      type="button"
+                      onClick={() => replaceInputRef.current?.click()}
+                      className="text-[10px] font-bold uppercase tracking-wider text-[#7A1C2E] hover:underline"
+                    >
+                      Upload cover
+                    </button>
                   </div>
                 )}
+                <input
+                  type="text"
+                  placeholder="Or paste cover image URL"
+                  value={coverImageUrl}
+                  onChange={(e) => {
+                    setCoverImageUrl(e.target.value);
+                    setCoverImageFile(null);
+                    setCoverImagePreview(e.target.value);
+                  }}
+                  className="bg-[#FDF8F2] border border-[#B8860B]/20 rounded text-xs p-2 focus:outline-none text-[#1C1008]"
+                />
               </div>
 
               {/* Order Arrangement index */}

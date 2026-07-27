@@ -27,6 +27,16 @@ import {
   getProductImageByTitle,
 } from '../../utils/productImageByTitle';
 
+const OCCASION_OPTIONS = [
+  'Wedding',
+  'Festive',
+  'Temple',
+  'Office',
+  'Casual',
+  'Party',
+  'Gifting',
+];
+
 function slugFromName(name: string): string {
   return name
     .toLowerCase()
@@ -46,7 +56,12 @@ export default function AdminProducts() {
   const [name, setName] = useState('');
   const [collectionId, setCollectionId] = useState('');
   const [details, setDetails] = useState('');
+  const [fabric, setFabric] = useState('');
+  const [work, setWork] = useState('');
+  const [border, setBorder] = useState('');
+  const [texture, setTexture] = useState('');
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [selectedOccasions, setSelectedOccasions] = useState<string[]>([]);
   const [mrp, setMrp] = useState(0);
   const [salePrice, setSalePrice] = useState(0);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -186,7 +201,12 @@ export default function AdminProducts() {
     setName('');
     setCollectionId(collections[0]?.id || '');
     setDetails('');
+    setFabric('');
+    setWork('');
+    setBorder('');
+    setTexture('');
     setSelectedColors([]);
+    setSelectedOccasions([]);
     setMrp(0);
     setSalePrice(0);
     setImageUrls([]);
@@ -215,9 +235,14 @@ export default function AdminProducts() {
     setName(prod.name);
     setCollectionId(prod.collectionId);
     setDetails(prod.details || '');
+    setFabric(prod.fabric || '');
+    setWork(prod.work || '');
+    setBorder(prod.border || '');
+    setTexture(prod.texture || '');
     setSelectedColors(
       (prod.colors || []).filter((color) => color && color !== 'Standard')
     );
+    setSelectedOccasions(prod.occasions || []);
     setMrp(prod.mrp);
     setSalePrice(prod.salePrice);
     setImageUrls(prod.images || []);
@@ -239,6 +264,14 @@ export default function AdminProducts() {
   const toggleColor = (color: string) => {
     setSelectedColors((prev) =>
       prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]
+    );
+  };
+
+  const toggleOccasion = (occasion: string) => {
+    setSelectedOccasions((prev) =>
+      prev.includes(occasion)
+        ? prev.filter((o) => o !== occasion)
+        : [...prev, occasion]
     );
   };
 
@@ -301,11 +334,11 @@ export default function AdminProducts() {
         name,
         slug: slugValue,
         collectionId,
-        fabric: collectionName,
-        work: '',
-        border: '',
-        texture: '',
-        occasions: [] as string[],
+        fabric: fabric.trim() || collectionName,
+        work: work.trim(),
+        border: border.trim(),
+        texture: texture.trim(),
+        occasions: selectedOccasions,
         colors: selectedColors.length > 0 ? selectedColors : ['Standard'],
         mrp: effectiveMrp,
         salePrice,
@@ -436,6 +469,7 @@ export default function AdminProducts() {
                   <th className="py-3 px-4 text-center">Stock</th>
                   <th className="py-3 px-4 text-center">Cart</th>
                   <th className="py-3 px-4 text-center">Featured</th>
+                  <th className="py-3 px-4 text-center">New</th>
                   <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -515,6 +549,21 @@ export default function AdminProducts() {
                               ? 'text-[#B8860B] bg-[#B8860B]/10'
                               : 'text-gray-300 hover:bg-gray-100'
                           }`}
+                        >
+                          <Check className="h-4 w-4 mx-auto" />
+                        </button>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          onClick={() =>
+                            handleQuickUpdate(prod.id, { isNewArrival: !prod.isNewArrival })
+                          }
+                          className={`p-1.5 rounded cursor-pointer ${
+                            prod.isNewArrival
+                              ? 'text-[#7A1C2E] bg-[#7A1C2E]/10'
+                              : 'text-gray-300 hover:bg-gray-100'
+                          }`}
+                          title="New arrival"
                         >
                           <Check className="h-4 w-4 mx-auto" />
                         </button>
@@ -642,6 +691,49 @@ export default function AdminProducts() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider">Fabric</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Pure Silk"
+                    value={fabric}
+                    onChange={(e) => setFabric(e.target.value)}
+                    className="bg-[#FDF8F2] border border-[#B8860B]/25 rounded px-3 py-2 text-sm focus:border-[#7A1C2E] focus:outline-none"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider">Work</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Zari Jaal"
+                    value={work}
+                    onChange={(e) => setWork(e.target.value)}
+                    className="bg-[#FDF8F2] border border-[#B8860B]/25 rounded px-3 py-2 text-sm focus:border-[#7A1C2E] focus:outline-none"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider">Border</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Broad Brocade"
+                    value={border}
+                    onChange={(e) => setBorder(e.target.value)}
+                    className="bg-[#FDF8F2] border border-[#B8860B]/25 rounded px-3 py-2 text-sm focus:border-[#7A1C2E] focus:outline-none"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider">Texture</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Rich and smooth"
+                    value={texture}
+                    onChange={(e) => setTexture(e.target.value)}
+                    className="bg-[#FDF8F2] border border-[#B8860B]/25 rounded px-3 py-2 text-sm focus:border-[#7A1C2E] focus:outline-none"
+                  />
+                </div>
+              </div>
+
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider">
                   Colours
@@ -661,6 +753,31 @@ export default function AdminProducts() {
                         }`}
                       >
                         {color}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider">
+                  Occasions
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {OCCASION_OPTIONS.map((occasion) => {
+                    const active = selectedOccasions.includes(occasion);
+                    return (
+                      <button
+                        key={occasion}
+                        type="button"
+                        onClick={() => toggleOccasion(occasion)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                          active
+                            ? 'bg-[#7A1C2E] text-white border-[#7A1C2E]'
+                            : 'bg-[#FDF8F2] text-[#1C1008] border-[#B8860B]/25 hover:border-[#7A1C2E]'
+                        }`}
+                      >
+                        {occasion}
                       </button>
                     );
                   })}

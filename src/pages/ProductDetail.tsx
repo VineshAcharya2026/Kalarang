@@ -240,6 +240,32 @@ export default function ProductDetail() {
               </p>
             </div>
 
+            {product.colors && product.colors.filter((c) => c && c !== 'Standard').length > 0 && (
+              <div className="flex flex-col gap-3">
+                <p className="text-xs font-bold uppercase tracking-[0.15em] text-[#1C1008]">
+                  Colour
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {product.colors
+                    .filter((c) => c && c !== 'Standard')
+                    .map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => setSelectedColor(color)}
+                        className={`px-3.5 py-2 rounded text-xs font-semibold uppercase tracking-wider border transition-colors ${
+                          selectedColor === color
+                            ? 'bg-[#7A1C2E] text-white border-[#7A1C2E]'
+                            : 'bg-white text-[#1C1008] border-[#B8860B]/25 hover:border-[#7A1C2E]'
+                        }`}
+                      >
+                        {color}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row gap-3.5 mt-2">
               {showAddToCart ? (
                 <button

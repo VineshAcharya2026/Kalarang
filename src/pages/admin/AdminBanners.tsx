@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useBanners } from '../../hooks/useBanners';
 import { Banner } from '../../types';
 import { uploadFile } from '../../firebase/storageUpload';
-import { Plus, Edit, Trash2, X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Image as ImageIcon, Loader2, Replace } from 'lucide-react';
 
 export default function AdminBanners() {
   const { banners, addBanner, updateBanner, deleteBanner } = useBanners();
@@ -23,6 +23,7 @@ export default function AdminBanners() {
 
   // Status flags
   const [submitting, setSubmitting] = useState(false);
+  const replaceInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -30,6 +31,13 @@ export default function AdminBanners() {
       setBannerImageFile(file);
       setBannerImagePreview(URL.createObjectURL(file));
     }
+    e.target.value = '';
+  };
+
+  const clearBannerImage = () => {
+    setBannerImageFile(null);
+    setBannerImageUrl('');
+    setBannerImagePreview('');
   };
 
   const openAddForm = () => {
@@ -85,13 +93,19 @@ export default function AdminBanners() {
       };
 
       if (editingId) {
-        await updateBanner(editingId, bannerPayload);
-      } else {
-        // Double check: if this banner is set to active, let's turn off other active banners
         if (isActive) {
           await Promise.all(
             banners
               .filter((b) => b.isActive && b.id !== editingId)
+              .map((b) => updateBanner(b.id, { isActive: false }))
+          );
+        }
+        await updateBanner(editingId, bannerPayload);
+      } else {
+        if (isActive) {
+          await Promise.all(
+            banners
+              .filter((b) => b.isActive)
               .map((b) => updateBanner(b.id, { isActive: false }))
           );
         }
@@ -324,37 +338,56 @@ export default function AdminBanners() {
                 <label className="text-xs font-bold text-[#1C1008] uppercase tracking-wider">
                   Hero Spotlight Cover Art Image
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* File */}
-                  <div className="border border-dashed border-[#B8860B]/30 p-4 rounded bg-[#FDF8F2] flex flex-col items-center justify-center gap-1 text-center">
-                    <ImageIcon className="h-5 w-5 text-[#B8860B]" />
-                    <span className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Upload Local File</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      className="text-[10px] text-gray-500 w-full"
-                    />
-                  </div>
-
-                  {/* Fallback */}
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none">Fallback Image URL</span>
-                    <input
-                      type="text"
-                      placeholder="e.g. https://images.unsplash.com/..."
-                      value={bannerImageUrl}
-                      onChange={(e) => setBannerImageUrl(e.target.value)}
-                      className="bg-[#FDF8F2] border border-[#B8860B]/20 rounded text-xs p-2 focus:outline-none text-[#1C1008]"
-                    />
-                  </div>
-                </div>
-
-                {bannerImagePreview && (
-                  <div className="mt-1 relative w-28 aspect-[16/9] border border-[#B8860B]/10 rounded overflow-hidden shadow-sm bg-neutral-100">
+                <input
+                  ref={replaceInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                {bannerImagePreview ? (
+                  <div className="relative w-full max-w-sm aspect-[16/9] border border-[#B8860B]/20 rounded overflow-hidden shadow-sm bg-neutral-100">
                     <img src={bannerImagePreview} alt="banner preview" className="w-full h-full object-cover" />
+                    <div className="absolute inset-x-0 bottom-0 flex gap-1 p-2 bg-black/55">
+                      <button
+                        type="button"
+                        onClick={() => replaceInputRef.current?.click()}
+                        className="flex-1 inline-flex items-center justify-center gap-1 text-white text-[10px] font-bold uppercase py-1.5 rounded hover:bg-white/20"
+                      >
+                        <Replace className="h-3 w-3" /> Replace
+                      </button>
+                      <button
+                        type="button"
+                        onClick={clearBannerImage}
+                        className="flex-1 inline-flex items-center justify-center gap-1 text-white text-[10px] font-bold uppercase py-1.5 rounded hover:bg-red-500/80"
+                      >
+                        <Trash2 className="h-3 w-3" /> Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border border-dashed border-[#B8860B]/30 p-4 rounded bg-[#FDF8F2] flex flex-col items-center justify-center gap-2 text-center">
+                    <ImageIcon className="h-5 w-5 text-[#B8860B]" />
+                    <button
+                      type="button"
+                      onClick={() => replaceInputRef.current?.click()}
+                      className="text-[10px] font-bold uppercase tracking-wider text-[#7A1C2E] hover:underline"
+                    >
+                      Upload image
+                    </button>
                   </div>
                 )}
+                <input
+                  type="text"
+                  placeholder="Or paste image URL"
+                  value={bannerImageUrl}
+                  onChange={(e) => {
+                    setBannerImageUrl(e.target.value);
+                    setBannerImageFile(null);
+                    setBannerImagePreview(e.target.value);
+                  }}
+                  className="bg-[#FDF8F2] border border-[#B8860B]/20 rounded text-xs p-2 focus:outline-none text-[#1C1008]"
+                />
               </div>
 
               {/* Status checkboxes */}

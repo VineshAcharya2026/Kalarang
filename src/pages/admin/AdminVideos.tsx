@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useVideos } from '../../hooks/useVideos';
 import { HeroVideo } from '../../types';
-import { Plus, Edit, Trash2, X, Film, Loader2, Play } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Film, Loader2, Play, Replace } from 'lucide-react';
 
 export default function AdminVideos() {
   const { videos, addVideo, updateVideo, deleteVideo, uploadVideoFile } = useVideos();
@@ -22,6 +22,7 @@ export default function AdminVideos() {
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [playingVideoUrl, setPlayingVideoUrl] = useState<string | null>(null);
+  const replaceInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -29,6 +30,13 @@ export default function AdminVideos() {
       setVideoFile(file);
       setVideoPreview(URL.createObjectURL(file));
     }
+    e.target.value = '';
+  };
+
+  const clearVideo = () => {
+    setVideoFile(null);
+    setVideoUrl('');
+    setVideoPreview('');
   };
 
   const openAddForm = () => {
@@ -308,47 +316,66 @@ export default function AdminVideos() {
                 <label className="text-xs font-bold text-[#1C1008] uppercase tracking-wider">
                   Cinematic Video File (.mp4 or .mov recommended)
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* File upload */}
-                  <div className="border border-dashed border-[#B8860B]/30 p-4 rounded bg-[#FDF8F2] flex flex-col items-center justify-center gap-1 text-center">
+                <input
+                  ref={replaceInputRef}
+                  type="file"
+                  accept="video/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                {videoPreview ? (
+                  <div className="relative w-full max-w-sm aspect-video border border-[#B8860B]/20 rounded overflow-hidden bg-black">
+                    <video src={videoPreview} className="w-full h-full object-contain" controls muted />
+                    <div className="absolute inset-x-0 bottom-0 flex gap-1 p-2 bg-black/55">
+                      <button
+                        type="button"
+                        onClick={() => replaceInputRef.current?.click()}
+                        className="flex-1 inline-flex items-center justify-center gap-1 text-white text-[10px] font-bold uppercase py-1.5 rounded hover:bg-white/20"
+                      >
+                        <Replace className="h-3 w-3" /> Replace
+                      </button>
+                      <button
+                        type="button"
+                        onClick={clearVideo}
+                        className="flex-1 inline-flex items-center justify-center gap-1 text-white text-[10px] font-bold uppercase py-1.5 rounded hover:bg-red-500/80"
+                      >
+                        <Trash2 className="h-3 w-3" /> Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="border border-dashed border-[#B8860B]/30 p-4 rounded bg-[#FDF8F2] flex flex-col items-center justify-center gap-2 text-center">
                     <Film className="h-5 w-5 text-[#B8860B]" />
-                    <span className="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Upload Local Video</span>
-                    <input
-                      type="file"
-                      accept="video/*"
-                      onChange={handleFileChange}
-                      className="text-[10px] text-gray-500 w-full"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => replaceInputRef.current?.click()}
+                      className="text-[10px] font-bold uppercase tracking-wider text-[#7A1C2E] hover:underline"
+                    >
+                      Upload video
+                    </button>
                   </div>
-
-                  {/* Fallback url input */}
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none">Or Direct Video URL</span>
-                    <input
-                      type="text"
-                      placeholder="e.g. https://domain.com/video.mp4"
-                      value={videoUrl}
-                      onChange={(e) => setVideoUrl(e.target.value)}
-                      className="bg-[#FDF8F2] border border-[#B8860B]/20 rounded text-xs p-2 focus:outline-none text-[#1C1008]"
-                    />
-                  </div>
-                </div>
+                )}
+                <input
+                  type="text"
+                  placeholder="Or paste direct video URL (.mp4)"
+                  value={videoUrl}
+                  onChange={(e) => {
+                    setVideoUrl(e.target.value);
+                    setVideoFile(null);
+                    setVideoPreview(e.target.value);
+                  }}
+                  className="bg-[#FDF8F2] border border-[#B8860B]/20 rounded text-xs p-2 focus:outline-none text-[#1C1008]"
+                />
 
                 {uploadProgress !== null && (
                   <div className="w-full bg-[#E8D5B0]/30 rounded-full h-2.5 mt-2 overflow-hidden border border-[#B8860B]/10">
-                    <div 
+                    <div
                       className="bg-[#7A1C2E] h-2.5 rounded-full transition-all duration-300"
                       style={{ width: `${uploadProgress}%` }}
                     />
                     <div className="text-right text-[10px] text-[#7A1C2E] font-bold mt-1">
                       Uploading: {uploadProgress}%
                     </div>
-                  </div>
-                )}
-
-                {videoPreview && (
-                  <div className="mt-1 relative w-36 aspect-[16/9] border border-[#B8860B]/10 rounded overflow-hidden shadow-sm bg-black flex items-center justify-center">
-                    <video src={videoPreview} className="w-full h-full object-cover" controls />
                   </div>
                 )}
               </div>
